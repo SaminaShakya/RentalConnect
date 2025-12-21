@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <h2 class="mb-4">Our Locations</h2>
+            <p class="lead">Find rental properties across Nepal's most popular cities.</p>
+            
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-map-marker-alt text-primary"></i> Kathmandu
+                    </h5>
+                    <p class="card-text">The capital city offers a wide range of rental properties from budget-friendly rooms to luxury apartments.</p>
+                </div>
+            </div>
+            
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-map-marker-alt text-primary"></i> Pokhara
+                    </h5>
+                    <p class="card-text">Beautiful lakeside city with scenic views and affordable rental options.</p>
+                </div>
+            </div>
+            
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-map-marker-alt text-primary"></i> Lalitpur
+                    </h5>
+                    <p class="card-text">Historic city with modern amenities and diverse rental properties.</p>
+                </div>
+            </div>
+            
+            <div class="mt-4">
+                <a href="{% url 'property_list' %}" class="btn btn-primary">
+                    <i class="fas fa-search me-2"></i>Browse Properties by Location
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+
+
+

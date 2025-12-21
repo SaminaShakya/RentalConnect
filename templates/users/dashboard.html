@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="dashboard-header">
+        <div>
+            <h2>Hi, {{ user.username }} 👋</h2>
+            {% if user.is_landlord %}
+                <span class="dashboard-badge">
+                    <i class="fas fa-building"></i>
+                    Landlord dashboard
+                </span>
+            {% elif user.is_tenant %}
+                <span class="dashboard-badge">
+                    <i class="fas fa-key"></i>
+                    Tenant dashboard
+                </span>
+            {% endif %}
+        </div>
+        <div>
+            <a href="{% url 'property_list' %}" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-search me-1"></i> Browse properties
+            </a>
+        </div>
+    </div>
+
+    <!-- Landlord view -->
+    {% if user.is_landlord %}
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card stat-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="stat-icon">
+                            <i class="fas fa-house"></i>
+                        </div>
+                        <div>
+                            <div class="text-muted small text-uppercase">Total properties</div>
+                            <div class="h4 mb-0">{{ properties|length }}</div>
+                        </div>
+                    </div>
+                    <p class="mb-0 text-muted small">Manage your active listings from here.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card stat-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">My properties</h5>
+                    <a href="/admin/listings/property/add/" class="btn btn-sm btn-primary">
+                        <i class="fas fa-plus me-1"></i> Add new
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if properties %}
+                        <ul class="list-group list-group-flush">
+                        {% for property in properties %}
+                            <li class="list-group-item">
+                                <div class="list-item-main">
+                                    <strong>{{ property.title }}</strong>
+                                    <div class="text-muted small">
+                                        <i class="fas fa-location-dot"></i>
+                                        {{ property.city }}
+                                    </div>
+                                </div>
+                                <div class="list-item-meta">
+                                    <div class="fw-bold text-primary">₹{{ property.rent }}/month</div>
+                                </div>
+                            </li>
+                        {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="mb-2">You haven't listed any properties yet.</p>
+                        <a href="/admin/listings/property/add/" class="btn btn-primary btn-sm">
+                            <i class="fas fa-plus me-1"></i> Add property via admin
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tenant view -->
+    {% elif user.is_tenant %}
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card stat-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="stat-icon">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <div>
+                            <div class="text-muted small text-uppercase">Total bookings</div>
+                            <div class="h4 mb-0">{{ bookings|length }}</div>
+                        </div>
+                    </div>
+                    <p class="mb-0 text-muted small">Track upcoming and past stays.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card stat-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">My bookings</h5>
+                    <a href="{% url 'property_list' %}" class="btn btn-sm btn-primary">
+                        <i class="fas fa-search me-1"></i> Find a new home
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if bookings %}
+                        <ul class="list-group list-group-flush">
+                        {% for booking in bookings %}
+                            <li class="list-group-item">
+                                <div class="list-item-main">
+                                    <strong>{{ booking.property.title }}</strong>
+                                    <div class="text-muted small">
+                                        {{ booking.property.city }} • {{ booking.start_date }} – {{ booking.end_date }}
+                                    </div>
+                                </div>
+                                <div class="list-item-meta">
+                                    {% if booking.approved %}
+                                        <span class="badge bg-success">Approved</span>
+                                    {% else %}
+                                        <span class="badge bg-warning text-dark">Pending</span>
+                                    {% endif %}
+                                </div>
+                            </li>
+                        {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="mb-2">You haven't made any bookings yet.</p>
+                        <a href="{% url 'property_list' %}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-search me-1"></i> Browse properties
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

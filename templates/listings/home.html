@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<!-- Hero Section with Image -->
+<section class="hero-section">
+    <div class="hero-image-container" style="background-image: url({% static 'images/house2.jpg' %});"></div>
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+        <h1>Find Your Perfect Home in Nepal</h1>
+        <p>Discover verified rooms, apartments, and houses across Kathmandu, Pokhara, and more.</p>
+        <a href="{% url 'property_list' %}" class="btn btn-primary btn-lg">Browse Properties</a>
+    </div>
+</section>
+
+
+
+<!-- Featured Properties -->
+<section class="container my-5">
+    <h2 class="text-center mb-4">Featured Properties</h2>
+    <div class="row">
+        {% for property in featured_properties %}
+        <div class="col-md-4">
+            <div class="card property-card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">{{ property.title }}</h5>
+                    <h6 class="card-subtitle mb-2 text-primary">₹{{ property.rent }}/month</h6>
+                    <p class="card-text">
+                        <i class="fas fa-map-marker-alt"></i> {{ property.city }}<br>
+                        <i class="fas fa-bed"></i> {{ property.bedrooms }} Bed • 
+                        <i class="fas fa-bath"></i> {{ property.bathrooms }} Bath
+                    </p>
+                </div>
+                <div class="card-footer">
+                    <a href="{% url 'property_detail' property.id %}" class="btn btn-outline-primary btn-sm">View Details</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <p class="text-center">No properties available yet. Add some through the admin panel!</p>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

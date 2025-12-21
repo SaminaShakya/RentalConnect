@@ -1,0 +1,37 @@
+"""
+URL configuration for rentalConnect project.
+
+The `urlpatterns` list routes URLs to views. For more information please see:
+    https://docs.djangoproject.com/en/5.2/topics/http/urls/
+Examples:
+Function views
+    1. Add an import:  from my_app import views
+    2. Add a URL to urlpatterns:  path('', views.home, name='home')
+Class-based views
+    1. Add an import:  from other_app.views import Home
+    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
+Including another URLconf
+    1. Import the include() function: from django.urls import include, path
+    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
+"""
+from django.contrib import admin
+from django.urls import path
+from django.contrib.auth import views as auth_views
+from listings import views as listing_views
+from users import views as user_views
+from django.urls import include
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('', listing_views.home, name='home'),
+    path('properties/', listing_views.property_list, name='property_list'),
+    path('property/<int:property_id>/', listing_views.property_detail, name='property_detail'),
+    path('dashboard/', listing_views.dashboard, name='dashboard'),
+    path('location/', listing_views.location, name='location'),
+    path('about/', listing_views.about, name='about'),
+    path('contact/', listing_views.contact, name='contact'),
+    path('register/', user_views.register, name='register'),
+    path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
+    path('logout/', auth_views.LogoutView.as_view(template_name='registration/logout.html'), name='logout'),
+    path('users/', include('users.urls')),
+]

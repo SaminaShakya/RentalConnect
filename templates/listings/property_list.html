@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Find Your Perfect Home</h2>
+    
+    <!-- Search Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">City</label>
+                    <input type="text" name="city" class="form-control" placeholder="e.g., Kathmandu" value="{{ request.GET.city }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Max Rent (₹)</label>
+                    <input type="number" name="max_rent" class="form-control" placeholder="e.g., 20000" value="{{ request.GET.max_rent }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">&nbsp;</label>
+                    <button type="submit" class="btn btn-primary w-100">Search</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Properties Grid -->
+    <div class="row">
+        {% for property in properties %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card property-card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">{{ property.title }}</h5>
+                    <h6 class="card-subtitle mb-2 text-primary">₹{{ property.rent }}/month</h6>
+                    <p class="card-text">
+                        <i class="fas fa-map-marker-alt"></i> {{ property.city }}<br>
+                        <i class="fas fa-bed"></i> {{ property.bedrooms }} Bed • 
+                        <i class="fas fa-bath"></i> {{ property.bathrooms }} Bath<br>
+                        <small class="text-muted">Posted by: {{ property.landlord.username }}</small>
+                    </p>
+                </div>
+                <div class="card-footer">
+                    <a href="{% url 'property_detail' property.id %}" class="btn btn-outline-primary btn-sm">View Details</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info text-center">
+                No properties found matching your criteria.
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
