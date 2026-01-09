@@ -1,0 +1,167 @@
+/* =========================
+   GLOBAL TEXT STYLES
+   ========================= */
+h1, h2, h3, h4, h5 {
+    color: #041a2e;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+
+p {
+    color: #25292c;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+}
+
+/* =========================
+   PROPERTY LIST & CARDS
+   ========================= */
+.property-card {
+    background-color: #f0f4f8;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.property-card:hover {
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    transform: translateY(-2px);
+}
+
+.property-card h4 {
+    margin-bottom: 10px;
+}
+
+.property-location {
+    color: #7f8c8d;
+    font-size: 14px;
+    margin-bottom: 6px;
+}
+
+.property-price {
+    color: #e74c3c;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+/* =========================
+   BUTTONS (MATCH BASE)
+   ========================= */
+.btn-primary {
+    background-color: #913696;
+    border-color: #913696;
+}
+
+.btn-primary:hover {
+    background-color: #7a2c7e;
+    border-color: #7a2c7e;
+}
+
+.btn-secondary {
+    background-color: #50677c;
+    border-color: #50677c;
+}
+
+.btn-secondary:hover {
+    background-color: #3f5466;
+    border-color: #3f5466;
+}
+
+/* =========================
+   FORMS
+   ========================= */
+.form-container {
+    max-width: 600px;
+    margin: 40px auto;
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 10px;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+}
+
+.form-container h3 {
+    margin-bottom: 20px;
+}
+
+/* =========================
+   LIST GROUPS (BOOKINGS)
+   ========================= */
+.list-group-item {
+    background-color: #f0f4f8;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    padding: 15px;
+}
+
+.list-item-meta {
+    font-size: 13px;
+    color: #7f8c8d;
+}
+
+/* =========================
+   DASHBOARD STATS (OPTIONAL)
+   ========================= */
+.stat-card {
+    background-color: #ffffff;
+    border-radius: 10px;
+    padding: 20px;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.stat-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #ecf5ff;
+    color: #2563eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 15px;
+    font-size: 18px;
+}
+
+.stat-text h4 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.stat-text p {
+    margin: 0;
+    font-size: 13px;
+    color: #7f8c8d;
+}
+
+/* =========================
+   LINKS (CONSISTENT)
+   ========================= */
+a {
+    color: #2563eb;
+}
+
+a:hover {
+    color: #1e40af;
+    text-decoration: underline;
+}
+
+/* =========================
+   RESPONSIVE FIXES
+   ========================= */
+@media (max-width: 768px) {
+    .form-container {
+        padding: 20px;
+    }
+
+    .property-card {
+        padding: 16px;
+    }
+}

@@ -2,45 +2,194 @@
 {% load static %}
 
 {% block content %}
-<!-- Hero Section with Image -->
+
+<!-- =========================
+     HERO SECTION
+     ========================= -->
 <section class="hero-section">
-    <div class="hero-image-container" style="background-image: url({% static 'images/house2.jpg' %});"></div>
+    <div class="hero-image-container"></div>
+
     <div class="hero-overlay"></div>
+
     <div class="hero-content">
         <h1>Find Your Perfect Home in Nepal</h1>
-        <p>Discover verified rooms, apartments, and houses across Kathmandu, Pokhara, and more.</p>
-        <a href="{% url 'property_list' %}" class="btn btn-primary btn-lg">Browse Properties</a>
+        <p>
+            Discover rooms, apartments, and houses across Kathmandu,
+            Pokhara, and other major cities.
+        </p>
+        <a href="{% url 'property_list' %}" class="btn btn-primary btn-lg">
+            Browse Properties
+        </a>
     </div>
 </section>
 
+<!-- =========================
+     TENANT SECTION
+     ========================= -->
+{% if user.is_authenticated and user.is_tenant %}
+<section class="container my-5">
+    <h2 class="mb-4">My Bookings</h2>
 
+    <div class="card p-4">
+        {% if bookings %}
+            <ul class="list-group">
+                {% for booking in bookings %}
+                    <li class="list-group-item">
+                        <strong>{{ booking.property.title }}</strong><br>
+                        {{ booking.start_date }} → {{ booking.end_date }}<br>
 
-<!-- Featured Properties -->
+                        {% if booking.approved %}
+                            <span class="badge bg-success">Approved</span>
+                        {% else %}
+                            <span class="badge bg-warning text-dark">Pending</span>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="text-muted mb-0">
+                You have not made any bookings yet.
+            </p>
+        {% endif %}
+    </div>
+</section>
+{% endif %}
+
+<!-- =========================
+     OWNER SECTION
+     ========================= -->
+{% if user.is_authenticated and user.is_landlord %}
+<section class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>My Properties</h2>
+
+        <a href="{% url 'add_property' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add Property
+        </a>
+    </div>
+
+    <div class="card p-4">
+        {% if owner_properties %}
+            <ul class="list-group">
+                {% for property in owner_properties %}
+                    <li class="list-group-item d-flex justify-content-between align-items-start">
+                        <div>
+                            <strong>{{ property.title }}</strong><br>
+                            {{ property.city }} — Rs. {{ property.rent }} / month<br>
+
+                            {% if property.is_booked %}
+                                <span class="badge bg-danger mt-1">Booked</span>
+                            {% else %}
+                                <span class="badge bg-success mt-1">Available</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="text-end">
+                            <a href="{% url 'edit_property' property.id %}"
+                               class="btn btn-sm btn-outline-secondary">
+                                Edit
+                            </a>
+
+                            <a href="{% url 'delete_property' property.id %}"
+                               class="btn btn-sm btn-outline-danger ms-1">
+                                Delete
+                            </a>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="text-muted mb-0">
+                You have not added any properties yet.
+            </p>
+        {% endif %}
+    </div>
+</section>
+{% endif %}
+
+<!-- =========================
+     FEATURED PROPERTIES
+     ========================= -->
 <section class="container my-5">
     <h2 class="text-center mb-4">Featured Properties</h2>
+
     <div class="row">
         {% for property in featured_properties %}
-        <div class="col-md-4">
-            <div class="card property-card h-100">
-                <div class="card-body">
-                    <h5 class="card-title">{{ property.title }}</h5>
-                    <h6 class="card-subtitle mb-2 text-primary">₹{{ property.rent }}/month</h6>
-                    <p class="card-text">
-                        <i class="fas fa-map-marker-alt"></i> {{ property.city }}<br>
-                        <i class="fas fa-bed"></i> {{ property.bedrooms }} Bed • 
-                        <i class="fas fa-bath"></i> {{ property.bathrooms }} Bath
-                    </p>
-                </div>
-                <div class="card-footer">
-                    <a href="{% url 'property_detail' property.id %}" class="btn btn-outline-primary btn-sm">View Details</a>
+            <div class="col-md-4 mb-4">
+                <div class="card property-card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ property.title }}</h5>
+
+                        <h6 class="card-subtitle mb-2 text-primary">
+                            Rs. {{ property.rent }} / month
+                        </h6>
+
+                        <p class="card-text">
+                            <i class="fas fa-map-marker-alt"></i>
+                            {{ property.city }} <br>
+
+                            <i class="fas fa-bed"></i>
+                            {{ property.bedrooms }} Bed •
+                            <i class="fas fa-bath"></i>
+                            {{ property.bathrooms }} Bath
+                        </p>
+                    </div>
+
+                    <div class="card-footer text-center">
+                        <a href="{% url 'property_detail' property.id %}"
+                           class="btn btn-outline-primary btn-sm">
+                            View Details
+                        </a>
+                    </div>
                 </div>
             </div>
-        </div>
         {% empty %}
-        <div class="col-12">
-            <p class="text-center">No properties available yet. Add some through the admin panel!</p>
-        </div>
+            <div class="col-12">
+                <p class="text-center text-muted">
+                    No properties available yet.
+                </p>
+            </div>
         {% endfor %}
     </div>
 </section>
+
+<!-- =========================
+     ABOUT SECTION
+     ========================= -->
+<section id="about" class="page-section">
+    <div class="container">
+        <h2>About Rental Connect</h2>
+
+        <p>
+            Rental Connect is a web-based rental management system developed
+            using Django. It helps tenants find suitable rental properties
+            and enables property owners to manage their listings efficiently.
+        </p>
+
+        <p>
+            The system provides role-based access for tenants, owners, and
+            administrators, ensuring secure and organized rental management.
+        </p>
+    </div>
+</section>
+
+<!-- =========================
+     CONTACT SECTION
+     ========================= -->
+<section id="contact" class="page-section page-section-light">
+    <div class="container">
+        <h2>Contact Us</h2>
+
+        <p>
+            If you have any questions or need support, feel free to reach out.
+        </p>
+
+        <ul>
+            <li><strong>Email:</strong> rentalconnect@example.com</li>
+            <li><strong>Phone:</strong> +977-98XXXXXXXX</li>
+            <li><strong>Location:</strong> Kathmandu, Nepal</li>
+        </ul>
+    </div>
+</section>
+
 {% endblock %}

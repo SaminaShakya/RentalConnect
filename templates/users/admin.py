@@ -1,9 +1,15 @@
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
-from .models import CustomUser
+from .models import Property, Booking
 
-# Register your CustomUser model
-@admin.register(CustomUser)
-class CustomUserAdmin(UserAdmin):
-    list_display = ('username', 'email', 'is_tenant', 'is_landlord', 'is_staff', 'is_superuser')
-    list_filter = ('is_tenant', 'is_landlord', 'is_staff', 'is_superuser')
+@admin.register(Property)
+class PropertyAdmin(admin.ModelAdmin):
+    list_display = ('title', 'city', 'rent', 'landlord', 'created_at')
+    list_filter = ('city',)
+    search_fields = ('title', 'city', 'address')
+
+
+@admin.register(Booking)
+class BookingAdmin(admin.ModelAdmin):
+    list_display = ('property', 'tenant', 'start_date', 'end_date', 'approved')
+    list_filter = ('approved',)
+    search_fields = ('property__title', 'tenant__username')

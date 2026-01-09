@@ -10,6 +10,7 @@ class Property(models.Model):
     bedrooms = models.IntegerField()
     bathrooms = models.IntegerField()
     address = models.TextField()
+    image = models.ImageField(upload_to='property_images/', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
 class Booking(models.Model):
@@ -18,3 +19,9 @@ class Booking(models.Model):
     start_date = models.DateField()
     end_date = models.DateField()
     approved = models.BooleanField(default=False)
+
+class PropertyDeleteReason(models.Model):
+    property = models.ForeignKey(Property, on_delete=models.CASCADE)
+    reason = models.TextField()
+    deleted_at = models.DateTimeField(auto_now_add=True)
+
