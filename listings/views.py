@@ -13,7 +13,7 @@ def home(request):
     if request.user.is_authenticated and request.user.is_tenant:
         bookings = Booking.objects.filter(
             tenant=request.user
-        ).order_by('-id')
+        ).order_by('-created_at')
 
     # OWNER DATA
     if request.user.is_authenticated and request.user.is_landlord:
@@ -21,14 +21,15 @@ def home(request):
             landlord=request.user
         ).order_by('-created_at')
 
-        # add booked status manually
         for prop in owner_properties:
             prop.is_booked = Booking.objects.filter(
                 property=prop,
-                approved=True
+                status='approved'
             ).exists()
 
-    featured_properties = Property.objects.all()[:6]
+    featured_properties = Property.objects.filter(
+        is_verified=True
+    ).order_by('-created_at')[:6]
 
     return render(request, 'listings/home.html', {
         'featured_properties': featured_properties,
@@ -37,9 +38,8 @@ def home(request):
     })
 
 
-
 def property_list(request):
-    properties = Property.objects.all()
+    properties = Property.objects.filter(is_verified=True)
 
     city = request.GET.get('city')
     max_rent = request.GET.get('max_rent')
@@ -56,10 +56,14 @@ def property_list(request):
 
 
 def property_detail(request, property_id):
-    property = get_object_or_404(Property, id=property_id)
+    prop = get_object_or_404(
+        Property,
+        id=property_id,
+        is_verified=True
+    )
 
     return render(request, 'listings/property_detail.html', {
-        'property': property
+        'property': prop
     })
 
 
@@ -87,9 +91,10 @@ def add_property(request):
 
     form = PropertyForm(request.POST or None, request.FILES or None)
     if form.is_valid():
-        property = form.save(commit=False)
-        property.landlord = request.user
-        property.save()
+        prop = form.save(commit=False)
+        prop.landlord = request.user
+        prop.is_verified = False  # admin must verify
+        prop.save()
         return redirect('home')
 
     return render(request, 'listings/add_property.html', {'form': form})
@@ -97,9 +102,17 @@ def add_property(request):
 
 @login_required
 def edit_property(request, property_id):
-    property = get_object_or_404(Property, id=property_id, landlord=request.user)
+    prop = get_object_or_404(
+        Property,
+        id=property_id,
+        landlord=request.user
+    )
 
-    form = PropertyForm(request.POST or None, request.FILES or None, instance=property)
+    form = PropertyForm(
+        request.POST or None,
+        request.FILES or None,
+        instance=prop
+    )
     if form.is_valid():
         form.save()
         return redirect('home')
@@ -109,17 +122,21 @@ def edit_property(request, property_id):
 
 @login_required
 def delete_property(request, property_id):
-    property = get_object_or_404(Property, id=property_id, landlord=request.user)
+    prop = get_object_or_404(
+        Property,
+        id=property_id,
+        landlord=request.user
+    )
 
     if request.method == 'POST':
         reason = request.POST.get('reason')
         PropertyDeleteReason.objects.create(
-            property=property,
+            property=prop,
             reason=reason
         )
-        property.delete()
+        prop.delete()
         return redirect('home')
 
     return render(request, 'listings/delete_property.html', {
-        'property': property
+        'property': prop
     })
