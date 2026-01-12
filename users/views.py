@@ -1,10 +1,10 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required
-from .models import CustomUser, Profile
-from .forms import ProfileForm
-from listings.models import Property
-from listings.models import Booking
+
+from .forms import UserRegisterForm, ProfileForm
+from .models import Profile
+from listings.models import Property, Booking
 
 
 # =========================
@@ -12,47 +12,19 @@ from listings.models import Booking
 # =========================
 def register(request):
     if request.method == 'POST':
-        username = request.POST.get('username')
-        email = request.POST.get('email')
-        password1 = request.POST.get('password1')
-        password2 = request.POST.get('password2')
-        phone = request.POST.get('phone')
-        user_type = request.POST.get('user_type', 'tenant')
-
-        if password1 != password2:
-            return render(request, 'registration/register.html', {
-                'error': 'Passwords do not match'
-            })
-
-        try:
-            user = CustomUser.objects.create_user(
-                username=username,
-                email=email,
-                password=password1,
-                phone=phone
-            )
-
-            # Role assignment
-            if user_type == 'tenant':
-                user.is_tenant = True
-            else:
-                user.is_landlord = True
-
-            user.save()
+        form = UserRegisterForm(request.POST)
+        if form.is_valid():
+            user = form.save()
             login(request, user)
-
             return redirect('dashboard')
+    else:
+        form = UserRegisterForm()
 
-        except Exception:
-            return render(request, 'registration/register.html', {
-                'error': 'Username already exists or invalid data'
-            })
-
-    return render(request, 'registration/register.html')
+    return render(request, 'registration/register.html', {'form': form})
 
 
 # =========================
-# USER LOGIN (ROLE BASED)
+# USER LOGIN
 # =========================
 def user_login(request):
     if request.method == 'POST':
@@ -61,7 +33,7 @@ def user_login(request):
 
         user = authenticate(request, username=username, password=password)
 
-        if user:
+        if user is not None:
             login(request, user)
 
             if user.is_superuser:
@@ -77,42 +49,52 @@ def user_login(request):
 
 
 # =========================
-# DASHBOARD (ALL ROLES)
+# DASHBOARD (ROLE BASED)
 # =========================
-from listings.models import Property, Booking
-
 @login_required
 def dashboard(request):
     user = request.user
-
-    properties = []
-    bookings = []
-
-    if user.is_tenant:
-        properties = Property.objects.all().order_by('-created_at')[:6]
-        bookings = Booking.objects.filter(tenant=user).order_by('-id')
 
     context = {
         'is_admin': user.is_superuser,
         'is_landlord': user.is_landlord,
         'is_tenant': user.is_tenant,
-        'properties': properties,
-        'bookings': bookings,
     }
+
+    if user.is_tenant:
+        context['properties'] = Property.objects.filter(
+            is_verified=True
+        ).order_by('-created_at')[:6]
+
+        context['bookings'] = Booking.objects.filter(
+            tenant=user
+        ).order_by('-created_at')
+
+    elif user.is_landlord:
+        context['properties'] = Property.objects.filter(
+            owner=user
+        ).order_by('-created_at')
+
+        context['bookings'] = Booking.objects.filter(
+            property__owner=user
+        ).order_by('-created_at')
 
     return render(request, 'users/dashboard.html', context)
 
 
-
 # =========================
-# PROFILE CREATE / UPDATE
+# PROFILE UPDATE
 # =========================
 @login_required
 def update_profile(request):
     profile, created = Profile.objects.get_or_create(user=request.user)
 
     if request.method == 'POST':
-        form = ProfileForm(request.POST, request.FILES, instance=profile)
+        form = ProfileForm(
+            request.POST,
+            request.FILES,
+            instance=profile
+        )
         if form.is_valid():
             form.save()
             return redirect('dashboard')
