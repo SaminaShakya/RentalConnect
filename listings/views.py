@@ -151,19 +151,25 @@ def request_booking(request, property_id):
         is_verified=True
     )
 
-    # only tenants can book
     if not request.user.is_tenant:
         return redirect('home')
 
-    form = BookingForm(request.POST or None)
+    if request.method == 'POST':
+        form = BookingForm(request.POST)
 
-    if form.is_valid():
-        booking = form.save(commit=False)
-        booking.property = prop
-        booking.tenant = request.user
-        booking.status = 'pending'
-        booking.save()
-        return redirect('dashboard')
+        if form.is_valid():
+            booking = form.save(commit=False)
+            booking.property = prop
+            booking.tenant = request.user
+            booking.status = 'pending'
+            booking.save()
+            return redirect('dashboard')
+
+        else:
+            print("❌ FORM ERRORS:", form.errors)
+
+    else:
+        form = BookingForm()
 
     return render(request, 'listings/request_booking.html', {
         'form': form,

@@ -51,7 +51,6 @@ class Booking(models.Model):
     def __str__(self):
         return f"{self.property.title} - {self.tenant.username}"
 
-
 class PropertyDeleteReason(models.Model):
     property = models.ForeignKey(
         Property,

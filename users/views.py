@@ -33,6 +33,10 @@ def register(request):
             password=password
         )
 
+        # clear roles first
+        user.is_tenant = False
+        user.is_landlord = False
+
         if role == 'tenant':
             user.is_tenant = True
         elif role == 'landlord':
@@ -46,27 +50,6 @@ def register(request):
 
 
 # =========================
-# USER LOGIN
-# =========================
-def user_login(request):
-    if request.method == 'POST':
-        username = request.POST.get('username')
-        password = request.POST.get('password')
-
-        user = authenticate(request, username=username, password=password)
-
-        if user is not None:
-            login(request, user)
-            return redirect('dashboard')
-
-        return render(request, 'registration/login.html', {
-            'error': 'Invalid username or password'
-        })
-
-    return render(request, 'registration/login.html')
-
-
-# =========================
 # DASHBOARD (ROLE BASED)
 # =========================
 @login_required
@@ -75,17 +58,17 @@ def dashboard(request):
 
     context = {
         'is_admin': user.is_superuser,
-        'is_landlord': user.is_landlord,
         'is_tenant': user.is_tenant,
+        'is_landlord': user.is_landlord,
+        'bookings': [],
+        'properties': [],
     }
 
-    # TENANT DASHBOARD
     if user.is_tenant:
         context['bookings'] = Booking.objects.filter(
             tenant=user
         ).order_by('-created_at')
 
-    # LANDLORD DASHBOARD
     elif user.is_landlord:
         context['properties'] = Property.objects.filter(
             landlord=user
@@ -96,7 +79,6 @@ def dashboard(request):
         ).order_by('-created_at')
 
     return render(request, 'users/dashboard.html', context)
-
 
 # =========================
 # PROFILE UPDATE
