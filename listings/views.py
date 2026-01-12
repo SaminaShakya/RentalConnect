@@ -151,6 +151,7 @@ def request_booking(request, property_id):
         is_verified=True
     )
 
+    # Only tenants can book
     if not request.user.is_tenant:
         return redirect('home')
 
@@ -158,15 +159,29 @@ def request_booking(request, property_id):
         form = BookingForm(request.POST)
 
         if form.is_valid():
-            booking = form.save(commit=False)
-            booking.property = prop
-            booking.tenant = request.user
-            booking.status = 'pending'
-            booking.save()
-            return redirect('dashboard')
+            start_date = form.cleaned_data['start_date']
+            end_date = form.cleaned_data['end_date']
 
-        else:
-            print("❌ FORM ERRORS:", form.errors)
+            # 🔴 ALGORITHM: CHECK FOR DATE OVERLAP
+            conflict_exists = Booking.objects.filter(
+                property=prop,
+                status='approved',
+                start_date__lt=end_date,
+                end_date__gt=start_date
+            ).exists()
+
+            if conflict_exists:
+                form.add_error(
+                    None,
+                    "This property is already booked for the selected dates."
+                )
+            else:
+                booking = form.save(commit=False)
+                booking.property = prop
+                booking.tenant = request.user
+                booking.status = 'pending'
+                booking.save()
+                return redirect('dashboard')
 
     else:
         form = BookingForm()
