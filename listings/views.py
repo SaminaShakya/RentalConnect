@@ -151,6 +151,7 @@ def request_booking(request, property_id):
         is_verified=True
     )
 
+    # only tenants can book
     if not request.user.is_tenant:
         return redirect('home')
 

@@ -79,15 +79,13 @@ def dashboard(request):
         'is_tenant': user.is_tenant,
     }
 
+    # TENANT DASHBOARD
     if user.is_tenant:
-        context['properties'] = Property.objects.filter(
-            is_verified=True
-        ).order_by('-created_at')[:6]
-
         context['bookings'] = Booking.objects.filter(
             tenant=user
         ).order_by('-created_at')
 
+    # LANDLORD DASHBOARD
     elif user.is_landlord:
         context['properties'] = Property.objects.filter(
             landlord=user
