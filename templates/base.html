@@ -35,16 +35,45 @@
 
             <!-- USER / AUTH AREA -->
             <div class="auth-links">
-                {% if user.is_authenticated %}
-                    <a href="{% url 'update_profile' %}" class="profile-link" title="Profile">
-                        <i class="fas fa-user-circle"></i>
-                        <span class="profile-name">{{ user.username }}</span>
+    {% if user.is_authenticated %}
+        <div class="dropdown">
+            <a href="#" class="profile-link dropdown-toggle"
+               id="userDropdown"
+               data-bs-toggle="dropdown"
+               aria-expanded="false">
+                <i class="fas fa-user-circle"></i>
+                <span class="profile-name">{{ user.username }}</span>
+            </a>
+
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li>
+                    <a class="dropdown-item" href="{% url 'dashboard' %}">
+                        Dashboard
                     </a>
-                {% else %}
-                    <a href="{% url 'login' %}" class="login-link">Login</a>
-                    <a href="{% url 'register' %}" class="btn-signup">Sign Up</a>
-                {% endif %}
-            </div>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="{% url 'update_profile' %}">
+                        Update Profile
+                    </a>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                    <form method="post" action="{% url 'logout' %}">
+                        {% csrf_token %}
+                        <button type="submit"
+                                class="dropdown-item text-danger">
+                            Logout
+                        </button>
+                    </form>
+                </li>
+            </ul>
+        </div>
+    {% else %}
+        <a href="{% url 'login' %}" class="login-link">Login</a>
+        <a href="{% url 'register' %}" class="btn-signup">Sign Up</a>
+    {% endif %}
+</div>
+
 
         </div>
     </div>

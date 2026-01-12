@@ -1,80 +1,102 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="dashboard-container">
+<div class="container mt-4 dashboard-container">
 
     <!-- HEADER -->
-    <div class="dashboard-header">
+    <div class="dashboard-header mb-4 d-flex justify-content-between align-items-start">
         <div>
             <h2>Dashboard</h2>
             <p class="text-muted">
                 Welcome, <strong>{{ request.user.username }}</strong>
             </p>
+
+            <a href="{% url 'update_profile' %}" 
+               class="btn btn-sm btn-outline-secondary mt-2">
+                Update Profile
+            </a>
         </div>
 
-        <span class="dashboard-badge">
-            {% if is_tenant %}Tenant{% elif is_landlord %}Owner{% else %}Admin{% endif %}
-        </span>
+        <div class="text-end">
+            <span class="badge bg-primary mb-2 d-block">
+                {% if is_tenant %}Tenant{% elif is_landlord %}Owner{% else %}Admin{% endif %}
+            </span>
+
+            <form method="post" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-outline-danger">
+                    Logout
+                </button>
+            </form>
+        </div>
     </div>
 
     <!-- TENANT DASHBOARD -->
     {% if is_tenant %}
-    <<div class="dashboard-section">
-    <h3>My Bookings</h3>
+    <div class="dashboard-section">
+        <h3>My Bookings</h3>
 
-    <div class="dashboard-card">
-        {% if bookings %}
-            <ul>
-                {% for booking in bookings %}
-                    <li>
-                        <strong>{{ booking.property.title }}</strong><br>
-                        {{ booking.start_date }} → {{ booking.end_date }}<br>
+        <div class="card p-3">
+            {% if bookings %}
+                <ul class="list-group">
+                    {% for booking in bookings %}
+                        <li class="list-group-item">
+                            <strong>{{ booking.property.title }}</strong><br>
+                            {{ booking.start_date }} → {{ booking.end_date }}<br>
 
-                        {% if booking.approved %}
-                            <span class="text-success">Approved</span>
-                        {% else %}
-                            <span class="text-warning">Pending</span>
-                        {% endif %}
-                    </li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p class="text-muted">
-                You have not made any booking requests yet.
-            </p>
-        {% endif %}
+                            {% if booking.status == 'approved' %}
+                                <span class="text-success">Approved</span>
+                            {% elif booking.status == 'rejected' %}
+                                <span class="text-danger">Rejected</span>
+                            {% else %}
+                                <span class="text-warning">Pending</span>
+                            {% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-muted mt-2">
+                    You have not made any booking requests yet.
+                </p>
+            {% endif %}
+        </div>
     </div>
-</div>
-
-
 
     <!-- OWNER DASHBOARD -->
     {% elif is_landlord %}
-        <div class="dashboard-section">
-            <h3>Owner Module</h3>
+    <div class="dashboard-section">
+        <h3>Owner Panel</h3>
 
-            <div class="dashboard-card">
-                <ul>
-                    <li>Add rental property</li>
-                    <li>View listed properties</li>
-                    <li>Manage booking requests</li>
-                </ul>
-            </div>
+        <div class="card p-3">
+            <ul>
+                <li>
+                    <a href="{% url 'add_property' %}">
+                        Add Rental Property
+                    </a>
+                </li>
+                <li>View listed properties</li>
+                <li>Manage booking requests</li>
+            </ul>
         </div>
+    </div>
 
     <!-- ADMIN DASHBOARD -->
     {% else %}
-        <div class="dashboard-section">
-            <h3>Admin Module</h3>
+    <div class="dashboard-section">
+        <h3>Admin Panel</h3>
 
-            <div class="dashboard-card">
-                <ul>
-                    <li><a href="/admin/">Open Admin Panel</a></li>
-                    <li>Manage users</li>
-                    <li>Oversee property listings</li>
-                </ul>
-            </div>
+        <div class="card p-3">
+            <ul>
+                <li>
+                    <a href="/admin/" target="_blank">
+                        Open Admin Panel
+                    </a>
+                </li>
+                <li>Manage users</li>
+                <li>Verify property listings</li>
+            </ul>
         </div>
+    </div>
     {% endif %}
 
 </div>

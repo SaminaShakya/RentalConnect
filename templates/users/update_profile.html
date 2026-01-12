@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h3 class="mb-4">Update Profile</h3>
+
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label class="form-label">Full Name</label>
+                            {{ form.full_name }}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Phone</label>
+                            {{ form.phone }}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Profile Photo</label>
+                            {{ form.photo }}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Bio</label>
+                            {{ form.bio }}
+                        </div>
+
+                        {% if form.errors %}
+                            <div class="alert alert-danger">
+                                {{ form.errors }}
+                            </div>
+                        {% endif %}
+
+                        <button type="submit" class="btn btn-primary w-100">
+                            Save Changes
+                        </button>
+                    </form>
+
+                    <div class="mt-3 text-center">
+                        <a href="{% url 'dashboard' %}">
+                            ← Back to Dashboard
+                        </a>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
