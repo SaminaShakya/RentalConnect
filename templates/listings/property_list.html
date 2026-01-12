@@ -1,56 +1,91 @@
 {% extends "base.html" %}
-
 {% block content %}
-<div class="container mt-4">
-    <h2>Find Your Perfect Home</h2>
-    
-    <!-- Search Filters -->
-    <div class="card mb-4">
-        <div class="card-body">
-            <form method="get" class="row g-3">
-                <div class="col-md-4">
-                    <label class="form-label">City</label>
-                    <input type="text" name="city" class="form-control" placeholder="e.g., Kathmandu" value="{{ request.GET.city }}">
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Max Rent (₹)</label>
-                    <input type="number" name="max_rent" class="form-control" placeholder="e.g., 20000" value="{{ request.GET.max_rent }}">
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">&nbsp;</label>
-                    <button type="submit" class="btn btn-primary w-100">Search</button>
-                </div>
-            </form>
-        </div>
+
+<div class="container mt-5">
+
+    <!-- PAGE HEADER -->
+    <div class="mb-4">
+        <h2 class="section-title">Browse Properties</h2>
+        <p class="text-muted">
+            Find verified rental properties that match your needs.
+        </p>
     </div>
 
-    <!-- Properties Grid -->
+    <!-- FILTER BAR -->
+    <div class="card p-3 mb-4">
+        <form method="get" class="row g-3 align-items-end">
+
+            <div class="col-md-4">
+                <label class="form-label">City</label>
+                <input type="text"
+                       name="city"
+                       value="{{ request.GET.city }}"
+                       class="form-control"
+                       placeholder="e.g. Kathmandu">
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">Max Rent</label>
+                <input type="number"
+                       name="max_rent"
+                       value="{{ request.GET.max_rent }}"
+                       class="form-control"
+                       placeholder="e.g. 20000">
+            </div>
+
+            <div class="col-md-4">
+                <button class="btn btn-primary w-100">
+                    Apply Filters
+                </button>
+            </div>
+
+        </form>
+    </div>
+
+    <!-- PROPERTY GRID -->
+    {% if properties %}
     <div class="row">
+
         {% for property in properties %}
-        <div class="col-md-6 col-lg-4">
-            <div class="card property-card h-100">
-                <div class="card-body">
-                    <h5 class="card-title">{{ property.title }}</h5>
-                    <h6 class="card-subtitle mb-2 text-primary">₹{{ property.rent }}/month</h6>
-                    <p class="card-text">
-                        <i class="fas fa-map-marker-alt"></i> {{ property.city }}<br>
-                        <i class="fas fa-bed"></i> {{ property.bedrooms }} Bed • 
-                        <i class="fas fa-bath"></i> {{ property.bathrooms }} Bath<br>
-                        <small class="text-muted">Posted by: {{ property.landlord.username }}</small>
+        <div class="col-md-4 mb-4">
+
+            <div class="property-card">
+
+                {% if property.image %}
+                <img src="{{ property.image.url }}" alt="{{ property.title }}">
+                {% else %}
+                <div style="height:220px; background:#e5e7eb;"></div>
+                {% endif %}
+
+                <div class="p-4">
+
+                    <h5 class="mb-1">{{ property.title }}</h5>
+
+                    <p class="text-muted mb-2">
+                        📍 {{ property.city }}
                     </p>
+
+                    <p class="fw-bold mb-3">
+                        Rs. {{ property.rent }} / month
+                    </p>
+
+                    <a href="{% url 'property_detail' property.id %}"
+                       class="btn btn-primary w-100">
+                        View Details
+                    </a>
+
                 </div>
-                <div class="card-footer">
-                    <a href="{% url 'property_detail' property.id %}" class="btn btn-outline-primary btn-sm">View Details</a>
-                </div>
+
             </div>
-        </div>
-        {% empty %}
-        <div class="col-12">
-            <div class="alert alert-info text-center">
-                No properties found matching your criteria.
-            </div>
+
         </div>
         {% endfor %}
+
     </div>
+    {% else %}
+        <p class="text-muted">No properties match your filters.</p>
+    {% endif %}
+
 </div>
+
 {% endblock %}

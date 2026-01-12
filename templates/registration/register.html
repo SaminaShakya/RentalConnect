@@ -1,11 +1,20 @@
 {% extends "base.html" %}
-
 {% block content %}
+
 <div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-5">
-            <div class="card p-4">
-                <h4 class="text-center mb-3">Join Rental Connect</h4>
+
+    <div class="row justify-content-center align-items-center" style="min-height:75vh;">
+        <div class="col-md-6">
+
+            <div class="card p-5">
+
+                <h2 class="section-title mb-2 text-center">
+                    Create your account
+                </h2>
+
+                <p class="text-muted text-center mb-4">
+                    Join Rental Connect and get started in minutes
+                </p>
 
                 {% if error %}
                     <div class="alert alert-danger">
@@ -18,44 +27,59 @@
 
                     <div class="mb-3">
                         <label class="form-label">Username</label>
-                        <input type="text" name="username"
-                               class="form-control" required>
+                        <input type="text"
+                               name="username"
+                               class="form-control"
+                               required>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Email</label>
-                        <input type="email" name="email"
+                        <input type="email"
+                               name="email"
                                class="form-control">
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Password</label>
-                        <input type="password" name="password"
-                               class="form-control" required>
+                        <input type="password"
+                               name="password"
+                               class="form-control"
+                               required>
                     </div>
 
-                    <div class="mb-3">
+                    <div class="mb-4">
                         <label class="form-label">Register as</label>
-                        <select name="role" class="form-control" required>
+                        <select name="role"
+                                class="form-control"
+                                required>
                             <option value="">Select role</option>
-                            <option value="tenant">Tenant</option>
-                            <option value="landlord">Landlord</option>
+                            <option value="tenant">Tenant (Looking for property)</option>
+                            <option value="landlord">Owner (Listing property)</option>
                         </select>
                     </div>
 
                     <button type="submit"
-                            class="btn btn-primary w-100">
+                            class="btn btn-primary w-100 mb-3">
                         Create Account
                     </button>
+
                 </form>
 
-                <div class="text-center mt-3">
-                    <a href="{% url 'login' %}">
-                        Already have an account? Login
-                    </a>
+                <div class="text-center">
+                    <p class="text-muted mb-0">
+                        Already have an account?
+                        <a href="{% url 'login' %}">
+                            Login here
+                        </a>
+                    </p>
                 </div>
+
             </div>
+
         </div>
     </div>
+
 </div>
+
 {% endblock %}

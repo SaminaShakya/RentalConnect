@@ -1,119 +1,158 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="container mt-4">
+<div class="container mt-5">
 
     <!-- HEADER -->
-    <div class="d-flex justify-content-between align-items-start mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-5">
         <div>
-            <h2>Dashboard</h2>
+            <h2 class="section-title mb-1">Dashboard</h2>
             <p class="text-muted">
                 Welcome, <strong>{{ request.user.username }}</strong>
             </p>
-
-            <a href="{% url 'update_profile' %}" class="btn btn-sm btn-outline-secondary">
-                Update Profile
-            </a>
         </div>
 
         <div class="text-end">
-            <span class="badge bg-primary mb-2 d-block">
-                {% if is_tenant %}Tenant{% elif is_landlord %}Owner{% else %}Admin{% endif %}
+            <span class="badge bg-primary mb-2">
+                {% if is_tenant %}Tenant{% elif is_landlord %}Landlord{% else %}Admin{% endif %}
             </span>
 
-            <form method="post" action="{% url 'logout' %}">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-sm btn-outline-danger">
-                    Logout
-                </button>
-            </form>
+            <div class="mt-2">
+                <a href="{% url 'update_profile' %}" class="btn btn-sm btn-outline-secondary">
+                    Update Profile
+                </a>
+
+                <form method="post" action="{% url 'logout' %}" class="d-inline">
+                    {% csrf_token %}
+                    <button class="btn btn-sm btn-outline-danger">
+                        Logout
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 
-    <!-- ================= TENANT ================= -->
+    <!-- ================= TENANT DASHBOARD ================= -->
     {% if is_tenant %}
-        <h4>My Bookings</h4>
+    <div class="card p-4">
+        <h4 class="mb-3">My Booking Requests</h4>
 
         {% if bookings %}
-            <ul class="list-group">
+            <div class="list-group">
                 {% for booking in bookings %}
-                    <li class="list-group-item">
-                        <strong>{{ booking.property.title }}</strong><br>
-                        {{ booking.start_date }} → {{ booking.end_date }}<br>
+                <div class="list-group-item">
+                    <strong>{{ booking.property.title }}</strong><br>
+                    {{ booking.start_date }} → {{ booking.end_date }}
 
-                        Status:
+                    <div class="mt-2">
                         {% if booking.status == 'approved' %}
-                            <span class="text-success">Approved</span>
+                            <span class="badge bg-success">Approved</span>
                         {% elif booking.status == 'rejected' %}
-                            <span class="text-danger">Rejected</span>
+                            <span class="badge bg-danger">Rejected</span>
                         {% else %}
-                            <span class="text-warning">Pending</span>
+                            <span class="badge bg-warning text-dark">Pending</span>
                         {% endif %}
-                    </li>
+                    </div>
+                </div>
                 {% endfor %}
-            </ul>
+            </div>
         {% else %}
-            <p class="text-muted">No bookings yet.</p>
+            <p class="text-muted">No booking requests yet.</p>
         {% endif %}
+    </div>
+    {% endif %}
 
-    <!-- ================= LANDLORD ================= -->
-    {% elif is_landlord %}
-        <h4>My Properties</h4>
+    <!-- ================= LANDLORD DASHBOARD ================= -->
+    {% if is_landlord %}
+
+    <!-- MY PROPERTIES -->
+    <div class="card p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4>My Properties</h4>
+            <a href="{% url 'add_property' %}" class="btn btn-primary btn-sm">
+                + Add Property
+            </a>
+        </div>
 
         {% if properties %}
-            <ul class="list-group mb-4">
+            <div class="list-group">
                 {% for property in properties %}
-                    <li class="list-group-item">
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
                         <strong>{{ property.title }}</strong><br>
                         {{ property.city }} – Rs. {{ property.rent }}
-                    </li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p class="text-muted">No properties listed.</p>
-        {% endif %}
+                    </div>
 
-        <h4>Booking Requests</h4>
+                    <div>
+                        <a href="{% url 'edit_property' property.id %}"
+                           class="btn btn-sm btn-outline-secondary">
+                            Edit
+                        </a>
+
+                        <a href="{% url 'delete_property' property.id %}"
+                           class="btn btn-sm btn-outline-danger">
+                            Delete
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-muted">You haven’t listed any properties yet.</p>
+        {% endif %}
+    </div>
+
+    <!-- BOOKING REQUESTS -->
+    <div class="card p-4">
+        <h4 class="mb-3">Booking Requests</h4>
 
         {% if bookings %}
-            <ul class="list-group">
+            <div class="list-group">
                 {% for booking in bookings %}
-                    <li class="list-group-item">
-                        <strong>{{ booking.property.title }}</strong><br>
-                        Tenant: {{ booking.tenant.username }}<br>
-                        {{ booking.start_date }} → {{ booking.end_date }}<br>
+                <div class="list-group-item">
 
-                        Status:
-                        {% if booking.status == 'approved' %}
-                            <span class="text-success">Approved</span>
-                        {% elif booking.status == 'rejected' %}
-                            <span class="text-danger">Rejected</span>
+                    <strong>{{ booking.property.title }}</strong><br>
+                    Tenant: {{ booking.tenant.username }}<br>
+                    {{ booking.start_date }} → {{ booking.end_date }}
+
+                    <div class="mt-2">
+                        {% if booking.status == 'pending' %}
+                            <a href="{% url 'manage_booking' booking.id 'approve' %}"
+                               class="btn btn-sm btn-success">
+                                Approve
+                            </a>
+
+                            <a href="{% url 'manage_booking' booking.id 'reject' %}"
+                               class="btn btn-sm btn-danger">
+                                Reject
+                            </a>
+                        {% elif booking.status == 'approved' %}
+                            <span class="badge bg-success">Approved</span>
                         {% else %}
-                            <span class="text-warning">Pending</span>
-
-                            <div class="mt-2">
-                                <a href="{% url 'manage_booking' booking.id 'approve' %}"
-                                   class="btn btn-sm btn-success">
-                                    Approve
-                                </a>
-
-                                <a href="{% url 'manage_booking' booking.id 'reject' %}"
-                                   class="btn btn-sm btn-danger">
-                                    Reject
-                                </a>
-                            </div>
+                            <span class="badge bg-danger">Rejected</span>
                         {% endif %}
-                    </li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p class="text-muted">No booking requests.</p>
-        {% endif %}
+                    </div>
 
-    <!-- ================= ADMIN ================= -->
-    {% else %}
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-muted">No booking requests yet.</p>
+        {% endif %}
+    </div>
+
+    {% endif %}
+
+    <!-- ================= ADMIN DASHBOARD ================= -->
+    {% if is_admin %}
+    <div class="card p-4">
         <h4>Admin Panel</h4>
-        <a href="/admin/" target="_blank">Open Admin</a>
+        <p class="text-muted">Manage users and verify property listings.</p>
+
+        <a href="/admin/" target="_blank" class="btn btn-outline-primary">
+            Open Admin Panel
+        </a>
+    </div>
     {% endif %}
 
 </div>
