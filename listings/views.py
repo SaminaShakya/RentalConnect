@@ -2,7 +2,8 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 
 from .models import Property, Booking, PropertyDeleteReason
-from .forms import PropertyForm
+from .forms import PropertyForm, BookingForm
+
 
 
 def home(request):
@@ -140,3 +141,47 @@ def delete_property(request, property_id):
     return render(request, 'listings/delete_property.html', {
         'property': prop
     })
+
+
+@login_required
+def request_booking(request, property_id):
+    prop = get_object_or_404(
+        Property,
+        id=property_id,
+        is_verified=True
+    )
+
+    if not request.user.is_tenant:
+        return redirect('home')
+
+    form = BookingForm(request.POST or None)
+
+    if form.is_valid():
+        booking = form.save(commit=False)
+        booking.property = prop
+        booking.tenant = request.user
+        booking.status = 'pending'
+        booking.save()
+        return redirect('dashboard')
+
+    return render(request, 'listings/request_booking.html', {
+        'form': form,
+        'property': prop
+    })
+
+
+@login_required
+def manage_booking(request, booking_id, action):
+    booking = get_object_or_404(
+        Booking,
+        id=booking_id,
+        property__landlord=request.user
+    )
+
+    if action == 'approve':
+        booking.status = 'approved'
+    elif action == 'reject':
+        booking.status = 'rejected'
+
+    booking.save()
+    return redirect('dashboard')
