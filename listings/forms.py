@@ -39,6 +39,36 @@ class BookingForm(forms.ModelForm):
             ),
         }
 
+    def __init__(self, *args, **kwargs):
+        # We pass tenant and property from the view
+        self.tenant = kwargs.pop('tenant', None)
+        self.property = kwargs.pop('property', None)
+        super().__init__(*args, **kwargs)
+
+    def clean(self):
+        cleaned_data = super().clean()
+        start = cleaned_data.get('start_date')
+        end = cleaned_data.get('end_date')
+
+        if start and end and start >= end:
+            raise forms.ValidationError(
+                "End date must be after start date."
+            )
+        # Check for booking conflicts
+        if self.tenant and self.property:
+            conflict_exists = Booking.objects.filter(
+                tenant=self.tenant,
+                property=self.property,
+                status__in=['pending', 'approved']
+            ).exists()
+
+            if conflict_exists:
+                raise forms.ValidationError(
+                    "This property is already booked for the selected dates."
+                )
+
+        return cleaned_data
+
     def clean(self):
         cleaned_data = super().clean()
         start = cleaned_data.get('start_date')

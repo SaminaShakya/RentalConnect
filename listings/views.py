@@ -109,16 +109,28 @@ def edit_property(request, property_id):
         landlord=request.user
     )
 
+    # 🔴 ALGORITHM: BLOCK EDIT IF APPROVED BOOKING EXISTS
+    has_approved_booking = Booking.objects.filter(
+        property=prop,
+        status='approved'
+    ).exists()
+
+    if has_approved_booking:
+        return redirect('dashboard')
+
     form = PropertyForm(
         request.POST or None,
         request.FILES or None,
         instance=prop
     )
+
     if form.is_valid():
         form.save()
-        return redirect('home')
+        return redirect('dashboard')
 
-    return render(request, 'listings/edit_property.html', {'form': form})
+    return render(request, 'listings/edit_property.html', {
+        'form': form
+    })
 
 
 @login_required
@@ -129,6 +141,18 @@ def delete_property(request, property_id):
         landlord=request.user
     )
 
+    # 🔴 ALGORITHM: BLOCK DELETE IF APPROVED BOOKING EXISTS
+    has_approved_booking = Booking.objects.filter(
+        property=prop,
+        status='approved'
+    ).exists()
+
+    if has_approved_booking:
+        return render(request, 'listings/delete_property.html', {
+            'property': prop,
+            'error': 'This property cannot be deleted because it has approved bookings.'
+        })
+
     if request.method == 'POST':
         reason = request.POST.get('reason')
         PropertyDeleteReason.objects.create(
@@ -136,7 +160,7 @@ def delete_property(request, property_id):
             reason=reason
         )
         prop.delete()
-        return redirect('home')
+        return redirect('dashboard')
 
     return render(request, 'listings/delete_property.html', {
         'property': prop
@@ -162,10 +186,10 @@ def request_booking(request, property_id):
             start_date = form.cleaned_data['start_date']
             end_date = form.cleaned_data['end_date']
 
-            # 🔴 ALGORITHM: CHECK FOR DATE OVERLAP
+            # 🔥 ALGORITHM 1: DATE OVERLAP CHECK
             conflict_exists = Booking.objects.filter(
                 property=prop,
-                status='approved',
+                status__in=['approved', 'pending'],
                 start_date__lt=end_date,
                 end_date__gt=start_date
             ).exists()
@@ -182,7 +206,6 @@ def request_booking(request, property_id):
                 booking.status = 'pending'
                 booking.save()
                 return redirect('dashboard')
-
     else:
         form = BookingForm()
 
