@@ -37,20 +37,12 @@ class Booking(models.Model):
         ('rejected', 'Rejected'),
     )
 
-    tenant = models.ForeignKey(
-        CustomUser,
-        on_delete=models.CASCADE,
-        related_name='bookings'
-    )
-    property = models.ForeignKey(
-        Property,
-        on_delete=models.CASCADE,
-        related_name='bookings'
-    )
+    tenant = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    property = models.ForeignKey(Property, on_delete=models.CASCADE)
     start_date = models.DateField()
     end_date = models.DateField()
     status = models.CharField(
-        max_length=10,
+        max_length=20,
         choices=STATUS_CHOICES,
         default='pending'
     )

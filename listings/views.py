@@ -172,11 +172,18 @@ def request_booking(request, property_id):
 
 @login_required
 def manage_booking(request, booking_id, action):
-    booking = get_object_or_404(
-        Booking,
-        id=booking_id,
-        property__landlord=request.user
-    )
+    booking = get_object_or_404(Booking, id=booking_id)
+
+    # SECURITY CHECK: only landlord of this property can approve/reject
+    if not request.user.is_landlord:
+        return redirect('dashboard')
+
+    if booking.property.landlord != request.user:
+        return redirect('dashboard')
+
+    # Only allow valid actions
+    if action not in ['approve', 'reject']:
+        return redirect('dashboard')
 
     if action == 'approve':
         booking.status = 'approved'

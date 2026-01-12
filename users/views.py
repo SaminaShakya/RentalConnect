@@ -2,8 +2,8 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required
 
-from .forms import UserRegisterForm, ProfileForm
-from .models import Profile
+from .models import CustomUser, Profile
+from .forms import ProfileForm
 from listings.models import Property, Booking
 
 
@@ -12,15 +12,37 @@ from listings.models import Property, Booking
 # =========================
 def register(request):
     if request.method == 'POST':
-        form = UserRegisterForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            login(request, user)
-            return redirect('dashboard')
-    else:
-        form = UserRegisterForm()
+        username = request.POST.get('username')
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+        role = request.POST.get('role')
 
-    return render(request, 'registration/register.html', {'form': form})
+        if not username or not password or not role:
+            return render(request, 'registration/register.html', {
+                'error': 'All fields are required'
+            })
+
+        if CustomUser.objects.filter(username=username).exists():
+            return render(request, 'registration/register.html', {
+                'error': 'Username already exists'
+            })
+
+        user = CustomUser.objects.create_user(
+            username=username,
+            email=email,
+            password=password
+        )
+
+        if role == 'tenant':
+            user.is_tenant = True
+        elif role == 'landlord':
+            user.is_landlord = True
+
+        user.save()
+        login(request, user)
+        return redirect('dashboard')
+
+    return render(request, 'registration/register.html')
 
 
 # =========================
@@ -35,10 +57,6 @@ def user_login(request):
 
         if user is not None:
             login(request, user)
-
-            if user.is_superuser:
-                return redirect('/admin/')
-
             return redirect('dashboard')
 
         return render(request, 'registration/login.html', {
@@ -72,11 +90,11 @@ def dashboard(request):
 
     elif user.is_landlord:
         context['properties'] = Property.objects.filter(
-            owner=user
+            landlord=user
         ).order_by('-created_at')
 
         context['bookings'] = Booking.objects.filter(
-            property__owner=user
+            property__landlord=user
         ).order_by('-created_at')
 
     return render(request, 'users/dashboard.html', context)
