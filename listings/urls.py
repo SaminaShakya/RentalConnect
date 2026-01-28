@@ -13,6 +13,7 @@ urlpatterns = [
     path('add-property/', views.add_property, name='add_property'),
     path('edit-property/<int:property_id>/', views.edit_property, name='edit_property'),
     path('delete-property/<int:property_id>/', views.delete_property, name='delete_property'),
+    path('property/<int:property_id>/verify/', views.request_property_verification, name='request_property_verification'),
 
     # Booking system
     path('property/<int:property_id>/book/', views.request_booking, name='request_booking'),

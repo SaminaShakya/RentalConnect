@@ -34,6 +34,33 @@
 
     <!-- ================= TENANT DASHBOARD ================= -->
     {% if is_tenant %}
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card p-3">
+                <small class="text-muted">Total Requests</small>
+                <div class="h4 mb-0">{{ stats.total_bookings|default:0 }}</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card p-3">
+                <small class="text-muted">Pending</small>
+                <div class="h4 mb-0">{{ stats.pending_bookings|default:0 }}</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card p-3">
+                <small class="text-muted">Approved</small>
+                <div class="h4 mb-0">{{ stats.approved_bookings|default:0 }}</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card p-3">
+                <small class="text-muted">Rejected</small>
+                <div class="h4 mb-0">{{ stats.rejected_bookings|default:0 }}</div>
+            </div>
+        </div>
+    </div>
+
     <div class="card p-4">
         <h4 class="mb-3">My Booking Requests</h4>
 
@@ -65,6 +92,33 @@
     <!-- ================= LANDLORD DASHBOARD ================= -->
     {% if is_landlord %}
 
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card p-3">
+                <small class="text-muted">Total Properties</small>
+                <div class="h4 mb-0">{{ stats.total_properties|default:0 }}</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card p-3">
+                <small class="text-muted">Verified</small>
+                <div class="h4 mb-0">{{ stats.verified_properties|default:0 }}</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card p-3">
+                <small class="text-muted">Unverified</small>
+                <div class="h4 mb-0">{{ stats.unverified_properties|default:0 }}</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card p-3">
+                <small class="text-muted">Pending Requests</small>
+                <div class="h4 mb-0">{{ stats.pending_booking_requests|default:0 }}</div>
+            </div>
+        </div>
+    </div>
+
     <!-- MY PROPERTIES -->
     <div class="card p-4 mb-4">
         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -81,6 +135,11 @@
                     <div>
                         <strong>{{ property.title }}</strong><br>
                         {{ property.city }} – Rs. {{ property.rent }}
+                        {% if property.is_verified %}
+                            <span class="badge bg-success ms-2">Verified</span>
+                        {% else %}
+                            <span class="badge bg-warning text-dark ms-2">Pending verification</span>
+                        {% endif %}
                     </div>
 
                     <div>

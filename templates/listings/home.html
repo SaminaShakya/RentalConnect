@@ -2,46 +2,187 @@
 {% block content %}
 
 <!-- HERO SECTION -->
-<div class="container mt-5">
-    <div class="hero">
-
+<div class="hero hero-full">
+    <div class="container">
         <div class="row align-items-center">
             <div class="col-md-7">
 
-                <span class="badge mb-3"
-                      style="background:#FFB703; color:#000; font-size:0.85rem;">
-                    Trusted Rental Platform
+                <span class="badge mb-3">
+                    <i class="fas fa-shield-alt"></i> Trusted Rental Platform
                 </span>
 
                 <h1 class="mt-3">
-                    Find verified rental homes <br>
-                    across Nepal 🏠
+                    Find Your Perfect Rental <br>
+                    in Nepal
                 </h1>
 
                 <p class="mt-3 mb-4">
-                    Rental Connect helps tenants find trusted homes and
-                    enables owners to manage listings and bookings efficiently.
+                    Discover verified properties, manage bookings seamlessly, and connect with
+                    trusted landlords and tenants all in one place.
                 </p>
 
                 <div class="d-flex gap-3 mt-4">
                     <a href="{% url 'property_list' %}"
                        class="btn btn-primary btn-lg">
-                        Browse Properties
+                        <i class="fas fa-search"></i> Browse Properties
                     </a>
 
                     {% if not user.is_authenticated %}
                     <a href="{% url 'register' %}"
                        class="btn btn-accent btn-lg">
-                        Get Started
+                        <i class="fas fa-rocket"></i> Get Started
                     </a>
                     {% endif %}
                 </div>
 
             </div>
         </div>
-
     </div>
 </div>
+
+<!-- DASHBOARD (EMBEDDED FOR LOGGED-IN USERS) -->
+{% if user.is_authenticated %}
+<div id="dashboard" class="container mt-5 mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="section-title mb-1">Dashboard</h2>
+            <p class="text-muted mb-0">
+                Welcome, <strong>{{ request.user.username }}</strong>
+            </p>
+        </div>
+
+        <div class="text-end">
+            <span class="badge bg-primary mb-2">
+                {% if is_tenant %}Tenant{% elif is_landlord %}Landlord{% else %}Admin{% endif %}
+            </span>
+            <div class="mt-2">
+                <a href="{% url 'update_profile' %}" class="btn btn-sm btn-outline-secondary">
+                    Update Profile
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {% if is_tenant %}
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3"><div class="card p-3"><small class="text-muted">Total Requests</small><div class="h4 mb-0">{{ stats.total_bookings|default:0 }}</div></div></div>
+        <div class="col-md-3 mb-3"><div class="card p-3"><small class="text-muted">Pending</small><div class="h4 mb-0">{{ stats.pending_bookings|default:0 }}</div></div></div>
+        <div class="col-md-3 mb-3"><div class="card p-3"><small class="text-muted">Approved</small><div class="h4 mb-0">{{ stats.approved_bookings|default:0 }}</div></div></div>
+        <div class="col-md-3 mb-3"><div class="card p-3"><small class="text-muted">Rejected</small><div class="h4 mb-0">{{ stats.rejected_bookings|default:0 }}</div></div></div>
+    </div>
+
+    <div class="card p-4">
+        <h4 class="mb-3">My Booking Requests</h4>
+        {% if bookings %}
+            <div class="list-group">
+                {% for booking in bookings %}
+                <div class="list-group-item">
+                    <strong>{{ booking.property.title }}</strong><br>
+                    {{ booking.start_date }} → {{ booking.end_date }}
+                    <div class="mt-2">
+                        {% if booking.status == 'approved' %}
+                            <span class="badge bg-success">Approved</span>
+                        {% elif booking.status == 'rejected' %}
+                            <span class="badge bg-danger">Rejected</span>
+                        {% else %}
+                            <span class="badge bg-warning text-dark">Pending</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-muted">No booking requests yet.</p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if is_landlord %}
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3"><div class="card p-3"><small class="text-muted">Total Properties</small><div class="h4 mb-0">{{ stats.total_properties|default:0 }}</div></div></div>
+        <div class="col-md-3 mb-3"><div class="card p-3"><small class="text-muted">Verified</small><div class="h4 mb-0">{{ stats.verified_properties|default:0 }}</div></div></div>
+        <div class="col-md-3 mb-3"><div class="card p-3"><small class="text-muted">Unverified</small><div class="h4 mb-0">{{ stats.unverified_properties|default:0 }}</div></div></div>
+        <div class="col-md-3 mb-3"><div class="card p-3"><small class="text-muted">Pending Requests</small><div class="h4 mb-0">{{ stats.pending_booking_requests|default:0 }}</div></div></div>
+    </div>
+
+    <div class="card p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4>My Properties</h4>
+            <a href="{% url 'add_property' %}" class="btn btn-primary btn-sm">+ Add Property</a>
+        </div>
+        {% if owner_properties %}
+            <div class="list-group">
+                {% for property in owner_properties %}
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>{{ property.title }}</strong><br>
+                        {{ property.city }} – Rs. {{ property.rent }}
+                        {% if property.is_verified %}
+                            <span class="badge bg-success ms-2">Verified</span>
+                        {% else %}
+                            <span class="badge bg-warning text-dark ms-2">Pending verification</span>
+                        {% endif %}
+                    </div>
+                    <div>
+                        {% if not property.is_verified %}
+                            {% if property.has_pending_verification %}
+                                <span class="badge bg-info text-dark me-2">Verification requested</span>
+                            {% else %}
+                                <a href="{% url 'request_property_verification' property.id %}"
+                                   class="btn btn-sm btn-outline-primary me-2">
+                                    Request verification
+                                </a>
+                            {% endif %}
+                        {% endif %}
+                        <a href="{% url 'edit_property' property.id %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                        <a href="{% url 'delete_property' property.id %}" class="btn btn-sm btn-outline-danger">Delete</a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-muted">You haven’t listed any properties yet.</p>
+        {% endif %}
+    </div>
+
+    <div class="card p-4">
+        <h4 class="mb-3">Booking Requests</h4>
+        {% if landlord_bookings %}
+            <div class="list-group">
+                {% for booking in landlord_bookings %}
+                <div class="list-group-item">
+                    <strong>{{ booking.property.title }}</strong><br>
+                    Tenant: {{ booking.tenant.username }}<br>
+                    {{ booking.start_date }} → {{ booking.end_date }}
+                    <div class="mt-2">
+                        {% if booking.status == 'pending' %}
+                            <a href="{% url 'manage_booking' booking.id 'approve' %}" class="btn btn-sm btn-success">Approve</a>
+                            <a href="{% url 'manage_booking' booking.id 'reject' %}" class="btn btn-sm btn-danger">Reject</a>
+                        {% elif booking.status == 'approved' %}
+                            <span class="badge bg-success">Approved</span>
+                        {% else %}
+                            <span class="badge bg-danger">Rejected</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-muted">No booking requests yet.</p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if is_admin and not is_tenant and not is_landlord %}
+    <div class="card p-4">
+        <h4>Admin Panel</h4>
+        <p class="text-muted">Manage users and verify property listings.</p>
+        <a href="/admin/" target="_blank" class="btn btn-outline-primary">Open Admin Panel</a>
+    </div>
+    {% endif %}
+
+</div>
+{% endif %}
 
 
 <!-- FEATURED PROPERTIES -->
@@ -56,46 +197,83 @@
         </a>
     </div>
 
-    {% if featured_properties %}
-    <div class="row">
-
-        {% for property in featured_properties %}
-        <div class="col-md-4 mb-4">
-
-            <div class="property-card">
-
-                {% if property.image %}
-                <img src="{{ property.image.url }}" alt="{{ property.title }}">
-                {% else %}
-                <div style="height:220px; background:#e5e7eb;"></div>
+    {% if page_obj %}
+    <!-- CAROUSEL CONTAINER -->
+    <div id="propertiesCarousel" class="carousel slide carousel-dark" data-bs-ride="false">
+        
+        <!-- CAROUSEL SLIDES -->
+        <div class="carousel-inner">
+            {% for property in page_obj %}
+                {% if forloop.counter0|divisibleby:3 %}
+                <div class="carousel-item {% if forloop.counter0 == 0 %}active{% endif %}">
+                    <div class="properties-carousel-row">
                 {% endif %}
 
-                <div class="p-4">
+                        <div class="property-carousel-card">
+                            <div class="property-carousel-image">
+                                {% if property.image %}
+                                <img src="{{ property.image.url }}" alt="{{ property.title }}">
+                                {% else %}
+                                <div class="property-placeholder">
+                                    <i class="fas fa-home"></i>
+                                    <p>No image</p>
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="property-carousel-body">
+                                <h6>{{ property.title }}</h6>
+                                <p class="text-muted small mb-2">
+                                    <i class="fas fa-map-marker-alt"></i> {{ property.city }}
+                                </p>
+                                <p class="price-small mb-2">
+                                    Rs. {{ property.rent|floatformat:0 }}/mo
+                                </p>
+                                <div class="property-features-small mb-2">
+                                    <span class="feature-badge-small"><i class="fas fa-bed"></i> {{ property.bedrooms }}</span>
+                                    <span class="feature-badge-small"><i class="fas fa-bath"></i> {{ property.bathrooms }}</span>
+                                </div>
+                                <a href="{% url 'property_detail' property.id %}"
+                                   class="btn btn-primary btn-sm w-100">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                            </div>
+                        </div>
 
-                    <h5 class="mb-1">{{ property.title }}</h5>
-
-                    <p class="text-muted mb-2">
-                        📍 {{ property.city }}
-                    </p>
-
-                    <p class="fw-bold mb-3">
-                        Rs. {{ property.rent }} / month
-                    </p>
-
-                    <a href="{% url 'property_detail' property.id %}"
-                       class="btn btn-primary w-100">
-                        View Details
-                    </a>
-
+                {% if forloop.counter|divisibleby:3 or forloop.last %}
+                    </div>
                 </div>
-            </div>
-
+                {% endif %}
+            {% endfor %}
         </div>
-        {% endfor %}
 
+        <!-- CAROUSEL CONTROLS -->
+        {% if page_obj|length > 3 %}
+        <button class="carousel-control-prev" type="button" data-bs-target="#propertiesCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Previous</span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#propertiesCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Next</span>
+        </button>
+
+        <!-- CAROUSEL INDICATORS -->
+        <div class="carousel-indicators mt-3">
+            {% for property in page_obj %}
+                {% if forloop.counter0|divisibleby:3 %}
+                <button type="button" data-bs-target="#propertiesCarousel" data-bs-slide-to="{{ forloop.counter0|divisibleby:3|yesno:'0,' }}" {% if forloop.counter0 == 0 %}class="active" aria-current="true"{% endif %} aria-label="Slide"></button>
+                {% endif %}
+            {% endfor %}
+        </div>
+        {% endif %}
     </div>
+
     {% else %}
-        <p class="text-muted">No featured properties available.</p>
+        <div class="text-center py-5">
+            <i class="fas fa-home" style="font-size: 4rem; color: var(--gray-400);"></i>
+            <p class="text-muted mt-3">No featured properties available at the moment.</p>
+        </div>
     {% endif %}
 
 </div>
@@ -111,28 +289,24 @@
             <!-- LEFT: ABOUT TEXT -->
             <div class="col-md-7 mb-4 mb-md-0">
                 <h2 class="section-title mb-3">
-                    About Rental Connect
+                    Why Choose Rental Connect?
                 </h2>
 
                 <p class="text-muted mb-3">
-                    Rental Connect is a role-based rental management system
-                    designed to simplify the interaction between tenants and
-                    property owners.
+                    Finding the right rental shouldn't be complicated. Rental Connect simplifies
+                    the entire rental process by bringing verified properties, transparent landlords,
+                    and serious tenants together on a single, secure platform.
                 </p>
 
                 <p class="text-muted mb-3">
-                    Unlike traditional listing platforms, Rental Connect focuses
-                    on <strong>verified properties</strong>,
-                    <strong>controlled booking workflows</strong>, and
-                    <strong>availability validation</strong> to reduce conflicts
-                    and improve trust.
+                    Whether you're searching for your next home or looking to rent out your property,
+                    our smart booking system prevents conflicts, ensures transparency, and builds trust
+                    between all parties involved.
                 </p>
 
                 <p class="text-muted">
-                    The system applies algorithmic checks to prevent overlapping
-                    bookings and enforces role-specific access, ensuring that
-                    tenants, owners, and administrators interact only with
-                    relevant features.
+                    Join thousands of users who have already experienced hassle-free renting with
+                    verified properties, instant booking updates, and a community you can trust.
                 </p>
             </div>
 
@@ -141,19 +315,27 @@
                 <div class="list-group">
 
                     <div class="list-group-item">
-                        🔐 <strong>Role-Based Access</strong><br>
-                        Tenants, owners, and admins have clearly separated
-                        responsibilities.
+                        <i class="fas fa-check-shield"></i>
+                        <div>
+                            <strong>Verified Properties</strong><br>
+                            <small class="text-muted">All listings are verified for authenticity and quality.</small>
+                        </div>
                     </div>
 
                     <div class="list-group-item">
-                        📅 <strong>Booking Validation Algorithm</strong><br>
-                        Prevents double-booking using date overlap checks.
+                        <i class="fas fa-clock"></i>
+                        <div>
+                            <strong>Real-Time Updates</strong><br>
+                            <small class="text-muted">Get instant notifications on bookings and approvals.</small>
+                        </div>
                     </div>
 
                     <div class="list-group-item">
-                        🛡 <strong>Verified Listings</strong><br>
-                        Properties are approved before becoming visible.
+                        <i class="fas fa-users"></i>
+                        <div>
+                            <strong>Trusted Community</strong><br>
+                            <small class="text-muted">Connect with verified landlords and serious tenants.</small>
+                        </div>
                     </div>
 
                 </div>
@@ -168,25 +350,42 @@
 
 <!-- ROLE INFO (NO ADMIN SHOWN) -->
 <div class="container mb-5">
+    <h2 class="section-title text-center mb-4">Designed for Everyone</h2>
     <div class="row text-center">
 
         <div class="col-md-6 mb-3">
-            <div class="card p-4 h-100">
-                <h4>👤 Tenant Module</h4>
+            <div class="card p-4 h-100 role-card">
+                <div class="mb-3">
+                    <i class="fas fa-search" style="font-size: 2.5rem; color: var(--primary-500);"></i>
+                </div>
+                <h4>Looking for a Home?</h4>
                 <p class="text-muted">
-                    Search verified properties, request bookings, and track
-                    booking approval status in real time.
+                    Browse verified properties, save your favorites, submit booking requests,
+                    and communicate directly with landlords. All in one intuitive dashboard.
                 </p>
+                <ul class="feature-list text-start mt-3">
+                    <li><i class="fas fa-check" style="color: var(--success-500);"></i> Advanced search filters</li>
+                    <li><i class="fas fa-check" style="color: var(--success-500);"></i> Instant booking requests</li>
+                    <li><i class="fas fa-check" style="color: var(--success-500);"></i> Real-time notifications</li>
+                </ul>
             </div>
         </div>
 
         <div class="col-md-6 mb-3">
-            <div class="card p-4 h-100">
-                <h4>🏠 Owner Module</h4>
+            <div class="card p-4 h-100 role-card">
+                <div class="mb-3">
+                    <i class="fas fa-building" style="font-size: 2.5rem; color: var(--accent-500);"></i>
+                </div>
+                <h4>Have a Property?</h4>
                 <p class="text-muted">
-                    List properties, review booking requests, and approve or
-                    reject tenants based on availability.
+                    List your property, manage booking requests, accept reliable tenants,
+                    and track everything through our landlord-friendly management system.
                 </p>
+                <ul class="feature-list text-start mt-3">
+                    <li><i class="fas fa-check" style="color: var(--success-500);"></i> Easy property listing</li>
+                    <li><i class="fas fa-check" style="color: var(--success-500);"></i> Request management</li>
+                    <li><i class="fas fa-check" style="color: var(--success-500);"></i> Booking analytics</li>
+                </ul>
             </div>
         </div>
 
@@ -209,15 +408,20 @@
                     We’d love to hear from you.
                 </p>
 
-                <p class="mb-2">
-                    📧 <strong>Email:</strong> rentalconnect@example.com
-                </p>
-                <p class="mb-2">
-                    📞 <strong>Phone:</strong> +977-98XXXXXXXX
-                </p>
-                <p>
-                    📍 <strong>Location:</strong> Kathmandu, Nepal
-                </p>
+                <div class="contact-info">
+                    <p class="mb-3">
+                        <i class="fas fa-envelope"></i>
+                        <strong>Email:</strong> rentalconnect@example.com
+                    </p>
+                    <p class="mb-3">
+                        <i class="fas fa-phone"></i>
+                        <strong>Phone:</strong> +977-98XXXXXXXX
+                    </p>
+                    <p>
+                        <i class="fas fa-map-marker-alt"></i>
+                        <strong>Location:</strong> Kathmandu, Nepal
+                    </p>
+                </div>
             </div>
 
             <!-- RIGHT: FORM (UI ONLY) -->
@@ -243,11 +447,11 @@
                     </div>
 
                     <button type="button" class="btn btn-primary w-100">
-                        Send Message
+                        <i class="fas fa-paper-plane"></i> Send Message
                     </button>
 
                     <p class="text-muted small text-center mt-2">
-                        *Demo form (no backend submission)
+                        <i class="fas fa-info-circle"></i> Demo form (no backend submission)
                     </p>
 
                 </form>

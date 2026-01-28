@@ -17,76 +17,103 @@
 <body>
 
     <!-- TOP NAVBAR -->
-    <div class="top-bar">
-        <div class="container">
+<nav class="top-bar">
+    <div class="container" style="display: flex; justify-content: space-between; align-items: center; position: relative;">
+        <!-- Logo stays on left -->
+        <div class="site-title">
+            <i class="fas fa-home"></i> Rental Connect
+        </div>
 
-            <!-- SITE TITLE -->
-            <div class="site-title">
-                <i class="fas fa-home"></i> Rental Connect
-            </div>
-
-            <!-- MAIN NAV LINKS -->
-            <div class="menu-links">
+        <!-- CENTERED Navigation links only -->
+        <div style="position: absolute; left: 50%; transform: translateX(-50%);">
+            <div class="menu-links" style="display: flex; gap: 2rem; justify-content: center;">
                 <a href="{% url 'home' %}">Home</a>
                 <a href="{% url 'property_list' %}">Properties</a>
                 <a href="{% url 'home' %}#about" class="scroll-link">About</a>
                 <a href="{% url 'home' %}#contact" class="scroll-link">Contact</a>
             </div>
-
-            <!-- USER / AUTH AREA -->
-            <div class="auth-links">
-    {% if user.is_authenticated %}
-        <div class="dropdown">
-            <a href="#" class="profile-link dropdown-toggle d-flex align-items-center gap-2"
-   id="userDropdown"
-   data-bs-toggle="dropdown"
-   aria-expanded="false">
-
-    {% if user.profile and user.profile.photo %}
-
-        <img src="{{ user.profile.photo.url }}"
-             alt="Avatar"
-             style="width:36px; height:36px; border-radius:50%; object-fit:cover;">
-    {% else %}
-        <i class="fas fa-user-circle fa-2x"></i>
-    {% endif %}
-
-    <span class="profile-name">{{ user.username }}</span>
-</a>
-
-
-            <ul class="dropdown-menu dropdown-menu-end">
-                <li>
-                    <a class="dropdown-item" href="{% url 'dashboard' %}">
-                        Dashboard
-                    </a>
-                </li>
-                <li>
-                    <a class="dropdown-item" href="{% url 'update_profile' %}">
-                        Update Profile
-                    </a>
-                </li>
-                <li><hr class="dropdown-divider"></li>
-                <li>
-                    <form method="post" action="{% url 'logout' %}">
-                        {% csrf_token %}
-                        <button type="submit"
-                                class="dropdown-item text-danger">
-                            Logout
-                        </button>
-                    </form>
-                </li>
-            </ul>
         </div>
-    {% else %}
-        <a href="{% url 'login' %}" class="login-link">Login</a>
-        <a href="{% url 'register' %}" class="btn-signup">Sign Up</a>
-    {% endif %}
-</div>
 
+        <!-- RIGHT-ALIGNED Auth/Profile section -->
+        <div class="auth-links" style="margin-left: auto;">
+            {% if user.is_authenticated %}
+            <!-- Notifications -->
+            <div class="dropdown me-2">
+                <a href="#" class="profile-link dropdown-toggle d-flex align-items-center gap-2"
+                   id="notifDropdown" data-bs-toggle="dropdown" aria-expanded="false"
+                   style="padding: 0.5rem 0.75rem;">
+                    <i class="fas fa-bell"></i>
+                    {% if notifications_unread_count and notifications_unread_count > 0 %}
+                        <span class="badge bg-danger">{{ notifications_unread_count }}</span>
+                    {% endif %}
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end" style="min-width: 320px;">
+                    <li class="px-3 py-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <strong>Notifications</strong>
+                            <a class="small text-decoration-none" href="{% url 'notifications' %}">View all</a>
+                        </div>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
 
+                    {% if notifications_latest %}
+                        {% for n in notifications_latest %}
+                        <li>
+                            <a class="dropdown-item {% if not n.is_read %}fw-bold{% endif %}"
+                               href="{% url 'notification_mark_read' n.id %}">
+                                <div class="small">{{ n.title }}</div>
+                                {% if n.message %}
+                                    <div class="small text-muted text-truncate">{{ n.message }}</div>
+                                {% endif %}
+                            </a>
+                        </li>
+                        {% endfor %}
+                    {% else %}
+                        <li class="px-3 py-2 text-muted small">No notifications yet.</li>
+                    {% endif %}
+                </ul>
+            </div>
+
+            <!-- Profile dropdown stays on the right -->
+            <div class="dropdown">
+                <a href="#" class="profile-link dropdown-toggle d-flex align-items-center gap-2"
+                   id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    {% if user.profile and user.profile.photo %}
+                    <img src="{{ user.profile.photo.url }}" alt="Avatar"
+                         style="width:36px; height:36px; border-radius:50%; object-fit:cover;">
+                    {% else %}
+                    <i class="fas fa-user-circle fa-2x"></i>
+                    {% endif %}
+                    <span class="profile-name">{{ user.username }}</span>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="{% url 'home' %}#dashboard">Dashboard</a></li>
+                    <li><a class="dropdown-item" href="{% url 'update_profile' %}">Update Profile</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <form method="post" action="{% url 'logout' %}">
+                            {% csrf_token %}
+                            <button type="submit" class="dropdown-item text-danger">Logout</button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
+            {% else %}
+            <!-- Login/Signup buttons on the right -->
+            <div style="display: flex; gap: 12px;">
+                <a href="{% url 'login' %}" 
+                   style="padding: 8px 20px; border-radius: 8px; font-weight: 600; background-color: transparent; color: #FFB703; border: 2px solid #FFB703; text-decoration: none; transition: all 0.3s ease;">
+                   Login
+                </a>
+                <a href="{% url 'register' %}" 
+                   style="padding: 8px 20px; border-radius: 8px; font-weight: 600; background-color: #FFB703; color: #0B132B; border: 2px solid #FFB703; text-decoration: none; transition: all 0.3s ease;">
+                   Sign Up
+                </a>
+            </div>
+            {% endif %}
         </div>
     </div>
+</nav>
 
     <!-- MAIN CONTENT -->
     <div class="main-content">

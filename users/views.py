@@ -1,9 +1,10 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth import login, authenticate
+from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 
 from .models import CustomUser, Profile
-from .forms import ProfileForm
+from .forms import ProfileForm, SimpleRegisterForm
+from .models import Notification
 from listings.models import Property, Booking
 
 
@@ -11,42 +12,34 @@ from listings.models import Property, Booking
 # USER REGISTRATION
 # =========================
 def register(request):
+    """
+    Uses SimpleRegisterForm so validation is centralized and consistent.
+    Keeps compatibility with the existing template input names.
+    """
     if request.method == 'POST':
-        username = request.POST.get('username')
-        email = request.POST.get('email')
-        password = request.POST.get('password')
-        role = request.POST.get('role')
+        form = SimpleRegisterForm(request.POST)
+        if form.is_valid():
+            user = form.create_user()
+            login(request, user)
+            return redirect('dashboard')
 
-        if not username or not password or not role:
-            return render(request, 'registration/register.html', {
-                'error': 'All fields are required'
-            })
+        # Show first error as the top-level message (template expects `error`)
+        first_error = None
+        if form.errors:
+            # Flatten all field + non-field errors
+            for errs in form.errors.values():
+                if errs:
+                    first_error = errs[0]
+                    break
 
-        if CustomUser.objects.filter(username=username).exists():
-            return render(request, 'registration/register.html', {
-                'error': 'Username already exists'
-            })
+        return render(request, 'registration/register.html', {
+            'error': first_error,
+            'form_errors': form.errors,
+        })
 
-        user = CustomUser.objects.create_user(
-            username=username,
-            email=email,
-            password=password
-        )
-
-        # clear roles first
-        user.is_tenant = False
-        user.is_landlord = False
-
-        if role == 'tenant':
-            user.is_tenant = True
-        elif role == 'landlord':
-            user.is_landlord = True
-
-        user.save()
-        login(request, user)
-        return redirect('dashboard')
-
-    return render(request, 'registration/register.html')
+    return render(request, 'registration/register.html', {
+        'form_errors': {},
+    })
 
 
 # =========================
@@ -54,31 +47,9 @@ def register(request):
 # =========================
 @login_required
 def dashboard(request):
-    user = request.user
-
-    context = {
-        'is_admin': user.is_superuser,
-        'is_tenant': user.is_tenant,
-        'is_landlord': user.is_landlord,
-        'bookings': [],
-        'properties': [],
-    }
-
-    if user.is_tenant:
-        context['bookings'] = Booking.objects.filter(
-            tenant=user
-        ).order_by('-created_at')
-
-    elif user.is_landlord:
-        context['properties'] = Property.objects.filter(
-            landlord=user
-        ).order_by('-created_at')
-
-        context['bookings'] = Booking.objects.filter(
-            property__landlord=user
-        ).order_by('-created_at')
-
-    return render(request, 'users/dashboard.html', context)
+    # Unified experience: dashboard is embedded on Home.
+    # Keep this URL for compatibility, but redirect to Home dashboard section.
+    return redirect('home')
 
 # =========================
 # PROFILE UPDATE
@@ -100,3 +71,43 @@ def update_profile(request):
         form = ProfileForm(instance=profile)
 
     return render(request, 'users/update_profile.html', {'form': form})
+
+
+# =========================
+# NOTIFICATIONS (IN-APP)
+# =========================
+@login_required
+def notifications_list(request):
+    notifications = Notification.objects.filter(
+        recipient=request.user
+    ).select_related('actor')
+    return render(request, 'users/notifications.html', {
+        'notifications': notifications,
+    })
+
+
+@login_required
+def notification_mark_read(request, notification_id):
+    notif = Notification.objects.filter(
+        id=notification_id,
+        recipient=request.user
+    ).first()
+    if notif:
+        notif.is_read = True
+        notif.save(update_fields=['is_read'])
+
+        # If it has a target URL, go there after marking read
+        if notif.target_url:
+            return redirect(notif.target_url)
+
+    return redirect('notifications')
+
+
+@login_required
+def notifications_mark_all_read(request):
+    if request.method == 'POST':
+        Notification.objects.filter(
+            recipient=request.user,
+            is_read=False
+        ).update(is_read=True)
+    return redirect('notifications')

@@ -22,6 +22,12 @@
                     </div>
                 {% endif %}
 
+                {% if form_errors and not error %}
+                    <div class="alert alert-danger">
+                        Please correct the errors and try again.
+                    </div>
+                {% endif %}
+
                 <form method="post">
                     {% csrf_token %}
 
@@ -30,14 +36,22 @@
                         <input type="text"
                                name="username"
                                class="form-control"
-                               required>
+                               required
+                               value="{{ request.POST.username }}">
+                        {% if form_errors.username %}
+                            <small class="text-danger">{{ form_errors.username.0 }}</small>
+                        {% endif %}
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Email</label>
                         <input type="email"
                                name="email"
-                               class="form-control">
+                               class="form-control"
+                               value="{{ request.POST.email }}">
+                        {% if form_errors.email %}
+                            <small class="text-danger">{{ form_errors.email.0 }}</small>
+                        {% endif %}
                     </div>
 
                     <div class="mb-3">
@@ -46,6 +60,23 @@
                                name="password"
                                class="form-control"
                                required>
+                        {% if form_errors.password %}
+                            <small class="text-danger">{{ form_errors.password.0 }}</small>
+                        {% endif %}
+                        {% if form_errors.__all__ %}
+                            <small class="text-danger d-block mt-1">{{ form_errors.__all__.0 }}</small>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Confirm Password</label>
+                        <input type="password"
+                               name="password_confirm"
+                               class="form-control"
+                               required>
+                        {% if form_errors.password_confirm %}
+                            <small class="text-danger">{{ form_errors.password_confirm.0 }}</small>
+                        {% endif %}
                     </div>
 
                     <div class="mb-4">
@@ -54,9 +85,12 @@
                                 class="form-control"
                                 required>
                             <option value="">Select role</option>
-                            <option value="tenant">Tenant (Looking for property)</option>
-                            <option value="landlord">Owner (Listing property)</option>
+                            <option value="tenant" {% if request.POST.role == 'tenant' %}selected{% endif %}>Tenant (Looking for property)</option>
+                            <option value="landlord" {% if request.POST.role == 'landlord' %}selected{% endif %}>Owner (Listing property)</option>
                         </select>
+                        {% if form_errors.role %}
+                            <small class="text-danger">{{ form_errors.role.0 }}</small>
+                        {% endif %}
                     </div>
 
                     <button type="submit"

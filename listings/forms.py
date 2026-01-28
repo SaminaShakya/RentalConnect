@@ -1,5 +1,5 @@
 from django import forms
-from .models import Property, Booking
+from .models import Property, Booking, PropertyVerificationRequest
 
 
 class PropertyForm(forms.ModelForm):
@@ -50,33 +50,39 @@ class BookingForm(forms.ModelForm):
         start = cleaned_data.get('start_date')
         end = cleaned_data.get('end_date')
 
-        if start and end and start >= end:
-            raise forms.ValidationError(
-                "End date must be after start date."
-            )
-        # Check for booking conflicts
-        if self.tenant and self.property:
-            conflict_exists = Booking.objects.filter(
-                tenant=self.tenant,
-                property=self.property,
-                status__in=['pending', 'approved']
-            ).exists()
-
-            if conflict_exists:
+        if start and end:
+            if start >= end:
                 raise forms.ValidationError(
-                    "This property is already booked for the selected dates."
+                    "End date must be after start date."
                 )
+            
+            # Check for DATE OVERLAPS, not just existence
+            if self.tenant and self.property:
+                conflicts = Booking.objects.filter(
+                    property=self.property,
+                    status__in=['approved', 'pending'],
+                    start_date__lt=end,
+                    end_date__gt=start
+                )
+                
+                # Exclude current booking if editing
+                if self.instance.pk:
+                    conflicts = conflicts.exclude(pk=self.instance.pk)
+                    
+                if conflicts.exists():
+                    raise forms.ValidationError(
+                        "This property is already booked for the selected dates."
+                    )
 
         return cleaned_data
 
-    def clean(self):
-        cleaned_data = super().clean()
-        start = cleaned_data.get('start_date')
-        end = cleaned_data.get('end_date')
 
-        if start and end and start >= end:
-            raise forms.ValidationError(
-                "End date must be after start date."
-            )
-
-        return cleaned_data
+class PropertyVerificationRequestForm(forms.ModelForm):
+    class Meta:
+        model = PropertyVerificationRequest
+        fields = ['ownership_proof', 'address_proof', 'notes']
+        widgets = {
+            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+            'ownership_proof': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+            'address_proof': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+        }

@@ -84,6 +84,41 @@
 
     </div>
 
+    <!-- RECOMMENDED PROPERTIES -->
+    {% if recommendations %}
+    <div class="mt-5">
+        <h3 class="section-title mb-4">Similar Properties You Might Like</h3>
+
+        <div class="row">
+            {% for rec_property in recommendations %}
+            <div class="col-md-3 mb-4">
+                <div class="property-card">
+                    {% if rec_property.image %}
+                    <img src="{{ rec_property.image.url }}" alt="{{ rec_property.title }}">
+                    {% else %}
+                    <div style="height:180px; background:#e5e7eb;"></div>
+                    {% endif %}
+
+                    <div class="p-3">
+                        <h6 class="mb-1">{{ rec_property.title|truncatechars:30 }}</h6>
+                        <p class="text-muted small mb-1">
+                            📍 {{ rec_property.city }}
+                        </p>
+                        <p class="fw-bold mb-2" style="color:#5B2EFF; font-size:0.9rem;">
+                            Rs. {{ rec_property.rent }} / month
+                        </p>
+                        <a href="{% url 'property_detail' rec_property.id %}"
+                           class="btn btn-sm btn-outline-primary w-100">
+                            View Details
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
 </div>
 
 {% endblock %}
