@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+    <h3>Cancel Booking</h3>
+
+    {% if error %}
+        <div class="alert alert-danger">{{ error }}</div>
+    {% endif %}
+
+    <p>
+        Are you sure you want to cancel your booking for 
+        <strong>{{ booking.property.title }}</strong> 
+        ({{ booking.start_date }} &rarr; {{ booking.end_date }})?
+    </p>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="cancellation_reason" class="form-label">Reason for cancellation</label>
+            <textarea class="form-control" name="cancellation_reason" id="cancellation_reason" rows="3" required>{{ request.POST.cancellation_reason }}</textarea>
+        </div>
+        <button type="submit" class="btn btn-danger">Confirm Cancel</button>
+        <a href="{% url 'booking_detail' booking.id %}" class="btn btn-secondary">Back</a>
+    </form>
+</div>
+{% endblock %}

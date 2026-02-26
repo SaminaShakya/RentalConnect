@@ -1,6 +1,24 @@
 from django.contrib import admin
-from .models import Property, Booking, PropertyDeleteReason, PropertyVerificationRequest
+from .models import (
+    Property,
+    Booking,
+    PropertyDeleteReason,
+    PropertyVerificationRequest,
+    BookingMessage,
+    EarlyExitRequest,
+    InspectionReport,
+    Settlement,
+    InspectionImage,
+    PropertyImage,
+)
 from users.models import Notification
+
+
+class PropertyImageInline(admin.TabularInline):
+    model = PropertyImage
+    extra = 1
+    fields = ('image', 'uploaded_at')
+    readonly_fields = ('uploaded_at',)
 
 
 @admin.register(Property)
@@ -16,6 +34,7 @@ class PropertyAdmin(admin.ModelAdmin):
     list_filter = ('is_verified', 'city')
     search_fields = ('title', 'city', 'landlord__username')
     list_editable = ('is_verified',)
+    inlines = [PropertyImageInline]
 
 
 @admin.register(PropertyVerificationRequest)
@@ -74,11 +93,54 @@ class BookingAdmin(admin.ModelAdmin):
         'status',
         'start_date',
         'end_date',
+        'monthly_rent',
+        'security_deposit',
     )
     list_filter = ('status',)
     search_fields = ('property__title', 'tenant__username')
 
 
+@admin.register(EarlyExitRequest)
+class EarlyExitRequestAdmin(admin.ModelAdmin):
+    list_display = ('booking', 'status', 'request_date', 'desired_move_out')
+    list_filter = ('status',)
+    search_fields = ('booking__property__title', 'booking__tenant__username')
+    readonly_fields = ('request_date', 'owner_response_date', 'penalty_amount', 'refund_amount', 'deductions')
+
+
+class InspectionImageInline(admin.TabularInline):
+    model = InspectionImage
+    extra = 0
+
+@admin.register(InspectionReport)
+class InspectionReportAdmin(admin.ModelAdmin):
+    list_display = ('exit_request', 'status', 'scheduled_date', 'damage_assessed_amount')
+    list_filter = ('status',)
+    search_fields = ('exit_request__booking__property__title',)
+    inlines = [InspectionImageInline]
+
+
+@admin.register(InspectionImage)
+class InspectionImageAdmin(admin.ModelAdmin):
+    list_display = ('report', 'uploaded_at')
+    readonly_fields = ('uploaded_at',)
+
+
+@admin.register(Settlement)
+class SettlementAdmin(admin.ModelAdmin):
+    list_display = ('exit_request', 'status', 'net_refund_to_tenant', 'net_payable_to_owner')
+    list_filter = ('status',)
+    search_fields = ('exit_request__booking__property__title',)
+
+
 @admin.register(PropertyDeleteReason)
 class PropertyDeleteReasonAdmin(admin.ModelAdmin):
     list_display = ('property', 'deleted_at')
+
+
+@admin.register(BookingMessage)
+class BookingMessageAdmin(admin.ModelAdmin):
+    list_display = ('booking', 'sender', 'created_at', 'is_read')
+    list_filter = ('is_read', 'created_at')
+    search_fields = ('booking__property__title', 'sender__username', 'content')
+    readonly_fields = ('created_at', 'booking', 'sender')

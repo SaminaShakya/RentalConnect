@@ -16,10 +16,13 @@ class Property(models.Model):
     bedrooms = models.PositiveIntegerField()
     bathrooms = models.PositiveIntegerField()
     address = models.TextField()
+    latitude = models.FloatField(null=True, blank=True, help_text="Decimal degrees")
+    longitude = models.FloatField(null=True, blank=True, help_text="Decimal degrees")
     image = models.ImageField(
         upload_to='property_images/',
         blank=True,
-        null=True
+        null=True,
+        help_text="Primary property image (upload at least one image)"
     )
     is_verified = models.BooleanField(default=False, db_index=True)  # Added index
     created_at = models.DateTimeField(auto_now_add=True)
@@ -31,23 +34,51 @@ class Property(models.Model):
         ordering = ['-created_at']
 
 
+class PropertyImage(models.Model):
+    """Multiple images per property (max 4)"""
+    property = models.ForeignKey(Property, on_delete=models.CASCADE, related_name='images')
+    image = models.ImageField(upload_to='property_images/')
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['uploaded_at']
+
+    def __str__(self):
+        return f"Image for {self.property.title}"
+
+    def clean(self):
+        """Ensure property doesn't exceed 4 images"""
+        if self.property.images.exclude(id=self.id).count() >= 4:
+            raise ValidationError("Maximum 4 images per property allowed.")
+
+
 class Booking(models.Model):
     STATUS_CHOICES = (
         ('pending', 'Pending'),
         ('approved', 'Approved'),
         ('rejected', 'Rejected'),
+        ('rented_out', 'Rented Out'),  # Finalized - property is occupied
+        ('cancelled', 'Cancelled'),      # Tenant cancelled before checkout
+        ('completed', 'Completed'),      # Tenancy ended normally
     )
 
     tenant = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     property = models.ForeignKey(Property, on_delete=models.CASCADE)
     start_date = models.DateField(db_index=True)  # Added index
     end_date = models.DateField(db_index=True)    # Added index
+    # snapshot of rent and security deposit when booking created
+    monthly_rent = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    security_deposit = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    lock_in_months = models.PositiveIntegerField(default=0, help_text="Number of months tenant agrees not to exit early.")
+
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
         default='pending',
         db_index=True  # Added index
     )
+    cancellation_reason = models.TextField(blank=True, null=True, help_text="Reason for cancellation (if cancelled)")
+    finalized_at = models.DateTimeField(blank=True, null=True, help_text="When landlord finalized the booking (rented_out)")
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -63,9 +94,9 @@ class Booking(models.Model):
         """
         today = date.today()
         
-        # Validate start date is not in the past
+        # Validate start date is not in the past (allow today and future)
         if self.start_date < today:
-            raise ValidationError("Cannot book dates in the past.")
+            raise ValidationError("Start date must be today or in the future.")
         
         # Validate end date is after start date
         if self.start_date >= self.end_date:
@@ -106,6 +137,148 @@ class PropertyDeleteReason(models.Model):
     )
     reason = models.TextField()
     deleted_at = models.DateTimeField(auto_now_add=True)
+
+
+class PropertyAppointment(models.Model):
+    """
+    Viewing/appointment scheduling system for properties.
+    Allows tenants to request appointment times to view the property.
+    """
+    STATUS_CHOICES = (
+        ('pending', 'Pending'),
+        ('confirmed', 'Confirmed'),
+        ('rejected', 'Rejected'),
+        ('completed', 'Completed'),
+        ('cancelled', 'Cancelled'),
+    )
+    
+    property = models.ForeignKey(Property, on_delete=models.CASCADE, related_name='appointments')
+    booking = models.ForeignKey(Booking, on_delete=models.CASCADE, related_name='appointments', null=True, blank=True)
+    tenant = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='appointment_requests')
+    
+    appointment_date = models.DateField(help_text="Date of appointment")
+    appointment_time = models.TimeField(help_text="Preferred time of appointment")
+    message = models.TextField(blank=True, help_text="Additional message/questions for landlord")
+    
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='pending',
+        db_index=True
+    )
+    
+    landlord_notes = models.TextField(blank=True, help_text="Landlord's response/notes")
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-appointment_date', '-appointment_time']
+        indexes = [
+            models.Index(fields=['property', 'status']),
+            models.Index(fields=['tenant', 'appointment_date']),
+        ]
+    
+    def __str__(self):
+        return f"Appointment: {self.property.title} on {self.appointment_date} at {self.appointment_time}"
+
+
+# ----------------------------------
+# Early tenant exit related models
+# ----------------------------------
+
+class EarlyExitRequest(models.Model):
+    STATUS_CHOICES = (
+        ('requested', 'Requested'),
+        ('owner_approved', 'Owner Approved'),
+        ('owner_rejected', 'Owner Rejected'),
+        ('inspection_scheduled', 'Inspection Scheduled'),
+        ('inspection_completed', 'Inspection Completed'),
+        ('settlement_confirmed', 'Settlement Confirmed'),
+        ('lease_terminated', 'Lease Terminated'),
+        ('disputed', 'Disputed'),
+    )
+
+    booking = models.OneToOneField(Booking, on_delete=models.CASCADE, related_name='early_exit')
+    request_date = models.DateTimeField(auto_now_add=True)
+    desired_move_out = models.DateField()
+    notice_given_days = models.PositiveIntegerField(null=True, blank=True)
+    status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='requested', db_index=True)
+    owner_response_date = models.DateTimeField(null=True, blank=True)
+    owner_comments = models.TextField(blank=True)
+    penalty_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    deductions = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    refund_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    last_updated = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"EarlyExit(Booking #{self.booking.id}) {self.status}"
+
+    def calculate_notice(self):
+        if self.booking and self.desired_move_out:
+            self.notice_given_days = (self.desired_move_out - date.today()).days
+
+    def calculate_penalty(self):
+        # basic penalty formula: one month's rent per remaining month or as configured
+        if self.booking.monthly_rent:
+            remaining_days = (self.booking.end_date - self.desired_move_out).days
+            remaining_months = remaining_days / 30
+            rate = 1.0
+            if self.booking.lock_in_months and remaining_months < self.booking.lock_in_months:
+                rate = 1.5  # higher penalty during lock-in
+            self.penalty_amount = self.booking.monthly_rent * remaining_months * rate
+            if self.penalty_amount < 0:
+                self.penalty_amount = 0
+
+    def save(self, *args, **kwargs):
+        self.calculate_notice()
+        self.calculate_penalty()
+        super().save(*args, **kwargs)
+
+
+class InspectionReport(models.Model):
+    exit_request = models.OneToOneField(EarlyExitRequest, on_delete=models.CASCADE, related_name='inspection')
+    scheduled_date = models.DateTimeField(null=True, blank=True)
+    inspector = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True, related_name='inspections')
+    status = models.CharField(max_length=20, choices=(('pending','Pending'),('completed','Completed')), default='pending')
+    checklist = models.JSONField(default=dict, blank=True)
+    notes = models.TextField(blank=True)
+    damage_assessed_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
+    def __str__(self):
+        return f"Inspection for exit #{self.exit_request.id} [{self.status}]"
+
+
+class InspectionImage(models.Model):
+    report = models.ForeignKey(InspectionReport, on_delete=models.CASCADE, related_name='images')
+    image = models.ImageField(upload_to='inspection_images/')
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Photo for {self.report}"
+
+class Settlement(models.Model):
+    exit_request = models.OneToOneField(EarlyExitRequest, on_delete=models.CASCADE, related_name='settlement')
+    lease = models.ForeignKey(Booking, on_delete=models.CASCADE)
+    total_due = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    total_credit = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    net_payable_to_owner = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    net_refund_to_tenant = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    calculated_on = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=20, choices=(('draft','Draft'),('tenant_accepted','Tenant Accepted'),('owner_accepted','Owner Accepted'),('disputed','Disputed'),('completed','Completed')), default='draft', db_index=True)
+    notes = models.TextField(blank=True)
+
+    def calculate(self):
+        # compute dues and credits using data from exit_request and booking
+        self.total_due = self.exit_request.penalty_amount
+        # include unpaid rent if any (not tracked here, assume 0)
+        self.total_credit = (self.exit_request.booking.security_deposit or 0) - self.exit_request.deductions
+        self.net_refund_to_tenant = max(self.total_credit - self.total_due, 0)
+        self.net_payable_to_owner = max(self.total_due - self.total_credit, 0)
+
+    def save(self, *args, **kwargs):
+        self.calculate()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"Deleted: {self.property.title}"
@@ -164,3 +337,35 @@ class PropertyVerificationRequest(models.Model):
 
     def __str__(self):
         return f"Verification({self.property_id}) {self.status}"
+
+
+class BookingMessage(models.Model):
+    """
+    Messages between tenant and landlord about a booking.
+    Enables direct communication regarding booking requests and details.
+    """
+    booking = models.ForeignKey(
+        Booking,
+        on_delete=models.CASCADE,
+        related_name='messages',
+        db_index=True
+    )
+    sender = models.ForeignKey(
+        CustomUser,
+        on_delete=models.CASCADE,
+        related_name='sent_booking_messages',
+        db_index=True
+    )
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    is_read = models.BooleanField(default=False, db_index=True)
+
+    class Meta:
+        ordering = ['created_at']
+        indexes = [
+            models.Index(fields=['booking', 'created_at']),
+            models.Index(fields=['sender', 'is_read']),
+        ]
+
+    def __str__(self):
+        return f"Message from {self.sender.username} on booking {self.booking.id}"

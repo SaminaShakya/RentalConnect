@@ -86,11 +86,16 @@ class SimpleRegisterForm(forms.Form):
         pw2 = cleaned.get('password_confirm')
 
         if pw and pw2 and pw != pw2:
-            raise ValidationError("Passwords do not match.")
+            self.add_error('password_confirm', "Passwords do not match.")
 
-        # Use Django’s configured password validators (stronger + consistent)
+        # Use Django's configured password validators (stronger + consistent)
         if pw:
-            password_validation.validate_password(pw)
+            try:
+                password_validation.validate_password(pw)
+            except ValidationError as e:
+                # ValidationError has .messages (list), not .message
+                for msg in e.messages:
+                    self.add_error('password', msg)
 
         return cleaned
 

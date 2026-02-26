@@ -38,6 +38,14 @@
                 <input type="number" name="max_rent" value="{{ max_rent_filter }}" class="form-control" placeholder="e.g. 20000">
             </div>
             <div class="filter-group">
+                <label>Latitude</label>
+                <input type="text" name="lat" value="{{ request.GET.lat }}" class="form-control" placeholder="e.g. 27.7172">
+            </div>
+            <div class="filter-group">
+                <label>Longitude</label>
+                <input type="text" name="lng" value="{{ request.GET.lng }}" class="form-control" placeholder="e.g. 85.3240">
+            </div>
+            <div class="filter-group">
                 <label>Sort</label>
                 <select name="sort" class="form-select">
                     <option value="newest" {% if sort == 'newest' %}selected{% endif %}>Newest</option>
@@ -68,7 +76,17 @@
             {% for property in page_obj %}
             <div class="property-card">
                 <div class="property-carousel-image">
-                    {% if property.image %}
+                    {% if property.images.all %}
+                        <!-- Show first image from PropertyImage -->
+                        <img src="{{ property.images.first.image.url }}" alt="{{ property.title }}">
+                        <!-- Image counter badge (only show if multiple images) -->
+                        {% if property.images.all|length > 1 %}
+                            <div style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.6); color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem;">
+                                📷 {{ property.images.all|length }}
+                            </div>
+                        {% endif %}
+                    {% elif property.image %}
+                        <!-- Fallback to legacy property.image -->
                         <img src="{{ property.image.url }}" alt="{{ property.title }}">
                     {% else %}
                         <div class="property-placeholder">
@@ -104,7 +122,7 @@
             <ul class="pagination justify-content-center">
                 {% if page_obj.has_previous %}
                 <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}&q={{ search_query|urlencode }}&city={{ city_filter|urlencode }}&max_rent={{ max_rent_filter|urlencode }}&sort={{ sort|urlencode }}">Previous</a>
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}&q={{ search_query|urlencode }}&city={{ city_filter|urlencode }}&max_rent={{ max_rent_filter|urlencode }}&sort={{ sort|urlencode }}&lat={{ request.GET.lat|urlencode }}&lng={{ request.GET.lng|urlencode }}">Previous</a>
                 </li>
                 {% endif %}
 
@@ -113,14 +131,14 @@
                     <li class="page-item active"><span class="page-link">{{ num }}</span></li>
                     {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ num }}&q={{ search_query|urlencode }}&city={{ city_filter|urlencode }}&max_rent={{ max_rent_filter|urlencode }}&sort={{ sort|urlencode }}">{{ num }}</a>
+                        <a class="page-link" href="?page={{ num }}&q={{ search_query|urlencode }}&city={{ city_filter|urlencode }}&max_rent={{ max_rent_filter|urlencode }}&sort={{ sort|urlencode }}&lat={{ request.GET.lat|urlencode }}&lng={{ request.GET.lng|urlencode }}">{{ num }}</a>
                     </li>
                     {% endif %}
                 {% endfor %}
 
                 {% if page_obj.has_next %}
                 <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.next_page_number }}&q={{ search_query|urlencode }}&city={{ city_filter|urlencode }}&max_rent={{ max_rent_filter|urlencode }}&sort={{ sort|urlencode }}">Next</a>
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}&q={{ search_query|urlencode }}&city={{ city_filter|urlencode }}&max_rent={{ max_rent_filter|urlencode }}&sort={{ sort|urlencode }}&lat={{ request.GET.lat|urlencode }}&lng={{ request.GET.lng|urlencode }}">Next</a>
                 </li>
                 {% endif %}
             </ul>

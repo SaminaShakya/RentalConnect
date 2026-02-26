@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+    <h3>Inspection Report for Exit #{{ exit.id }}</h3>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <!-- checklist would normally be a complex widget; using textarea for now -->
+        <div class="mb-3">
+            <label for="checklist">Checklist (JSON)</label>
+            <textarea name="checklist" id="checklist" class="form-control" rows="4">{{ inspection.checklist }}</textarea>
+        </div>
+        <div class="mb-3">
+            {{ form.notes.label_tag }}
+            {{ form.notes }}
+        </div>
+        <div class="mb-3">
+            <label for="damage_amount">Damage amount</label>
+            <input type="number" step="0.01" name="damage_amount" id="damage_amount" class="form-control" value="{{ inspection.damage_assessed_amount }}">
+        </div>
+        <div class="mb-3">
+            {{ form.images.label_tag }}
+            {{ form.images }}
+        </div>
+        <button type="submit" class="btn btn-primary">Submit Report</button>
+        <a href="{% url 'early_exit_detail' exit.id %}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}

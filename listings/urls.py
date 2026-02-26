@@ -17,7 +17,23 @@ urlpatterns = [
 
     # Booking system
     path('property/<int:property_id>/book/', views.request_booking, name='request_booking'),
+    
+    # Booking messaging & actions (must come before generic manage_booking pattern)
+    path('booking/<int:booking_id>/messages/', views.booking_messages, name='booking_messages'),
+    path('booking/<int:booking_id>/detail/', views.booking_detail, name='booking_detail'),
+    path('booking/<int:booking_id>/cancel/', views.cancel_booking, name='cancel_booking'),
+    path('booking/<int:booking_id>/finalize/', views.finalize_booking, name='finalize_booking'),
+    
+    # Generic booking management action (approve/reject)
     path('booking/<int:booking_id>/<str:action>/', views.manage_booking, name='manage_booking'),
+
+    # Early exit
+    path('booking/<int:booking_id>/exit/request/', views.request_early_exit, name='request_early_exit'),
+    path('exit/<int:exit_id>/', views.early_exit_detail, name='early_exit_detail'),
+    path('exit/<int:exit_id>/review/<str:action>/', views.owner_review_exit, name='owner_review_exit'),
+    path('exit/<int:exit_id>/schedule/', views.schedule_inspection, name='schedule_inspection'),
+    path('exit/<int:exit_id>/inspection/submit/', views.submit_inspection_report, name='submit_inspection_report'),
+    path('exit/<int:exit_id>/settlement/', views.view_settlement, name='view_settlement'),
 
     # Static pages
     path('about/', views.about, name='about'),

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+    <h3>Finalize Booking</h3>
+
+    {% if error %}
+        <div class="alert alert-danger">{{ error }}</div>
+    {% endif %}
+
+    <p>
+        You are about to mark the booking for 
+        <strong>{{ booking.property.title }}</strong> 
+        ({{ booking.start_date }} &rarr; {{ booking.end_date }}) as <strong>Rented Out</strong>.
+    </p>
+    <p>This action notifies the tenant and records the finalization time.</p>
+
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-success">Finalize Booking</button>
+        <a href="{% url 'booking_detail' booking.id %}" class="btn btn-secondary">Back</a>
+    </form>
+</div>
+{% endblock %}

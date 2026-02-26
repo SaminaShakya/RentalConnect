@@ -26,6 +26,26 @@
                 <form method="post">
                     {% csrf_token %}
 
+                    <!-- ERROR MESSAGES -->
+                    {% if booking_error or form_errors or form.non_field_errors %}
+                        <div class="alert alert-danger mb-3">
+                            <i class="fas fa-exclamation-circle"></i>
+                            {% if booking_error %}
+                                {{ booking_error }}
+                            {% elif form.non_field_errors %}
+                                {% for error in form.non_field_errors %}
+                                    {{ error }}<br>
+                                {% endfor %}
+                            {% elif form_errors %}
+                                {% for field, errors in form_errors.items %}
+                                    {% for error in errors %}
+                                        {{ error }}<br>
+                                    {% endfor %}
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    {% endif %}
+
                     <div class="mb-3">
                         <label class="form-label">Start Date</label>
                         {{ form.start_date }}
@@ -35,19 +55,6 @@
                         <label class="form-label">End Date</label>
                         {{ form.end_date }}
                     </div>
-
-                    <!-- ALGORITHM FEEDBACK -->
-                    {% if form.non_field_errors %}
-                        <div class="alert alert-danger">
-                            {{ form.non_field_errors }}
-                        </div>
-                    {% endif %}
-
-                    {% if form.errors %}
-                        <div class="alert alert-warning">
-                            Please correct the errors above.
-                        </div>
-                    {% endif %}
 
                     <button type="submit"
                             class="btn btn-primary w-100">
@@ -59,6 +66,19 @@
                     <a href="{% url 'property_detail' property.id %}">
                         ← Back to property
                     </a>
+                </div>
+
+                <hr class="my-4">
+
+                <!-- CONTACT LANDLORD SECTION -->
+                <div class="bg-light p-3 rounded">
+                    <p class="text-muted mb-2"><small><strong>Questions?</strong></small></p>
+                    <p class="text-muted mb-3">
+                        After submitting your booking request, you'll be able to message the landlord directly to discuss details and answer any questions.
+                    </p>
+                    <p class="text-muted mb-0"><small>
+                        <i class="fas fa-envelope"></i> Contact: {{ property.landlord.email }}
+                    </small></p>
                 </div>
 
             </div>

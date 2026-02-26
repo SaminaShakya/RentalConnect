@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+    <h3>Settlement for Exit #{{ exit.id }}</h3>
+    <div class="card mb-4">
+        <div class="card-body">
+            <p><strong>Total Due:</strong> Rs. {{ settlement.total_due }}</p>
+            <p><strong>Total Credit:</strong> Rs. {{ settlement.total_credit }}</p>
+            <p><strong>Refund to Tenant:</strong> Rs. {{ settlement.net_refund_to_tenant }}</p>
+            <p><strong>Payable to Owner:</strong> Rs. {{ settlement.net_payable_to_owner }}</p>
+        </div>
+    </div>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Submit</button>
+        <a href="{% url 'early_exit_detail' exit.id %}" class="btn btn-secondary">Back</a>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+    <div class="alert alert-warning">
+        <h5>Access denied</h5>
+        <p>{{ message }}</p>
+    </div>
+
+    {% if booking %}
+        <p><strong>Booking:</strong> {{ booking.property.title }} ({{ booking.start_date }} → {{ booking.end_date }})</p>
+    {% endif %}
+
+    <a href="{% url 'dashboard' %}" class="btn btn-secondary">Back to Dashboard</a>
+</div>
+{% endblock %}

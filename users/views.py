@@ -32,13 +32,19 @@ def register(request):
                     first_error = errs[0]
                     break
 
+        # Create a copy of errors without __all__ key (Django templates forbid underscore-prefixed attributes)
+        form_errors_dict = dict(form.errors)
+        nonfield_errors = form_errors_dict.pop('__all__', [])
+
         return render(request, 'registration/register.html', {
             'error': first_error,
-            'form_errors': form.errors,
+            'form_errors': form_errors_dict,
+            'nonfield_errors': nonfield_errors,
         })
 
     return render(request, 'registration/register.html', {
         'form_errors': {},
+        'nonfield_errors': [],
     })
 
 

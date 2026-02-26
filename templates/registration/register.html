@@ -63,8 +63,8 @@
                         {% if form_errors.password %}
                             <small class="text-danger">{{ form_errors.password.0 }}</small>
                         {% endif %}
-                        {% if form_errors.__all__ %}
-                            <small class="text-danger d-block mt-1">{{ form_errors.__all__.0 }}</small>
+                        {% if nonfield_errors %}
+                            <small class="text-danger d-block mt-1">{{ nonfield_errors.0 }}</small>
                         {% endif %}
                     </div>
 

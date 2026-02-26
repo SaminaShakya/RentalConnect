@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+    <h3>Request Early Exit for "{{ booking.property.title }}"</h3>
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            {{ form.desired_move_out.label_tag }}
+            {{ form.desired_move_out }}
+            {% if form.desired_move_out.errors %}
+                <div class="text-danger">{{ form.desired_move_out.errors }}</div>
+            {% endif %}
+        </div>
+        <button type="submit" class="btn btn-primary">Submit Request</button>
+        <a href="{% url 'booking_detail' booking.id %}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}

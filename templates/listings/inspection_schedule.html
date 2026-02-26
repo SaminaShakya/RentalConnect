@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+    <h3>Schedule Inspection for Exit Request #{{ exit.id }}</h3>
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            {{ form.scheduled_date.label_tag }}
+            {{ form.scheduled_date }}
+            {% if form.scheduled_date.errors %}
+                <div class="text-danger">{{ form.scheduled_date.errors }}</div>
+            {% endif %}
+        </div>
+        <div class="mb-3">
+            {{ form.notes.label_tag }}
+            {{ form.notes }}
+        </div>
+        <button type="submit" class="btn btn-primary">Schedule</button>
+        <a href="{% url 'early_exit_detail' exit.id %}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}

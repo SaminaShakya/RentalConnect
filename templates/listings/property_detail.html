@@ -10,10 +10,59 @@
 
             <div class="card p-4">
 
-                {% if property.image %}
-                    <img src="{{ property.image.url }}"
-                         class="img-fluid rounded mb-4"
-                         style="height:380px; width:100%; object-fit:cover;">
+                <!-- MAIN IMAGE CAROUSEL -->
+                <div id="propertyCarousel" class="carousel slide mb-4" data-bs-ride="carousel">
+                    <div class="carousel-inner">
+                        {% if property.images.all %}
+                            {% for prop_image in property.images.all %}
+                                <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                                    <img src="{{ prop_image.image.url }}"
+                                         class="d-block w-100 rounded"
+                                         style="height:400px; object-fit:cover;"
+                                         alt="Property image">
+                                </div>
+                            {% endfor %}
+                        {% elif property.image %}
+                            <div class="carousel-item active">
+                                <img src="{{ property.image.url }}"
+                                     class="d-block w-100 rounded"
+                                     style="height:400px; object-fit:cover;"
+                                     alt="{{ property.title }}">
+                            </div>
+                        {% else %}
+                            <div class="carousel-item active">
+                                <div class="d-block w-100 rounded" style="height:400px; background:#e5e7eb; display:flex; align-items:center; justify-content:center;">
+                                    <span class="text-muted">No images available</span>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Carousel controls (only show if there are multiple images) -->
+                    {% if property.images.all|length > 1 %}
+                        <button class="carousel-control-prev" type="button" data-bs-target="#propertyCarousel" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#propertyCarousel" data-bs-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        </button>
+                    {% endif %}
+                </div>
+
+                <!-- THUMBNAIL STRIP -->
+                {% if property.images.all|length > 1 %}
+                    <div class="d-flex gap-2 mb-4" style="overflow-x: auto; padding-bottom: 5px;">
+                        {% for prop_image in property.images.all %}
+                            <img src="{{ prop_image.image.url }}"
+                                 class="rounded cursor-pointer"
+                                 style="height:70px; width:70px; object-fit:cover; cursor:pointer; flex-shrink:0; border: 2px solid transparent; transition: all 0.3s ease;"
+                                 data-bs-target="#propertyCarousel"
+                                 data-bs-slide-to="{{ forloop.counter0 }}"
+                                 onmouseover="this.style.borderColor='#5B2EFF'; this.style.opacity='0.8';"
+                                 onmouseout="this.style.borderColor='transparent'; this.style.opacity='1';"
+                                 alt="Thumbnail">
+                        {% endfor %}
+                    </div>
                 {% endif %}
 
                 <h2 class="mb-1">{{ property.title }}</h2>
@@ -53,11 +102,18 @@
                     {% if user.is_tenant %}
                         <a href="{% url 'request_booking' property.id %}"
                            class="btn btn-primary w-100 mb-2">
-                            Request Booking
+                            <i class="fas fa-calendar"></i> Request Booking
+                        </a>
+
+                        <a href="#" 
+                           class="btn btn-outline-secondary w-100 mb-2"
+                           data-bs-toggle="modal" 
+                           data-bs-target="#contactOwnerModal">
+                            <i class="fas fa-comments"></i> Contact Owner
                         </a>
 
                         <p class="text-muted small text-center">
-                            Availability is checked automatically.
+                            Questions? Contact the owner first!
                         </p>
 
                     {% elif user.is_landlord %}
@@ -119,6 +175,155 @@
     </div>
     {% endif %}
 
+</div>
+
+<!-- CONTACT OWNER MODAL -->
+<div class="modal fade" id="contactOwnerModal" tabindex="-1" style="--bs-modal-width: 600px;">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-comments"></i> Contact Property Owner
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="card bg-light mb-3">
+                    <div class="card-body">
+                        <h6 class="mb-2">{{ property.title }}</h6>
+                        <p class="text-muted mb-0">📍 {{ property.city }}</p>
+                    </div>
+                </div>
+
+                <!-- OWNER INFO AT TOP -->
+                <div class="mb-3">
+                    <strong>Owner Information:</strong><br>
+                    <p class="mb-1">
+                        <i class="fas fa-user"></i> 
+                        {{ property.landlord.first_name }} {{ property.landlord.last_name }}
+                    </p>
+                    <p class="mb-1">
+                        <i class="fas fa-envelope"></i> 
+                        <a href="mailto:{{ property.landlord.email }}">
+                            {{ property.landlord.email }}
+                        </a>
+                    </p>
+                    {% if property.landlord.profile.phone %}
+                    <p class="mb-0">
+                        <i class="fas fa-phone"></i> 
+                        {{ property.landlord.profile.phone }}
+                    </p>
+                    {% endif %}
+                </div>
+
+                <hr>
+                {% if active_booking %}
+                    <!-- CHAT INTERFACE FOR ACTIVE BOOKING -->
+                    <h6 class="mb-2">
+                        <i class="fas fa-comments"></i> Booking Conversation
+                    </h6>
+                    <!-- quick actions for booking -->
+                    <div class="mb-3">
+                        {% if can_cancel_active_booking %}
+                            <a href="{% url 'cancel_booking' active_booking.id %}" class="btn btn-sm btn-danger me-2">
+                                <i class="fas fa-times-circle"></i> Cancel Booking
+                            </a>
+                        {% endif %}
+                        {% if can_finalize_active_booking %}
+                            <a href="{% url 'finalize_booking' active_booking.id %}" class="btn btn-sm btn-success me-2">
+                                <i class="fas fa-check-circle"></i> Finalize Booking
+                            </a>
+                        {% endif %}
+                        {% if active_booking.status == 'approved' and user == active_booking.tenant and not active_booking.early_exit_id %}
+                            <a href="{% url 'request_early_exit' active_booking.id %}" class="btn btn-sm btn-warning">
+                                <i class="fas fa-sign-out-alt"></i> Request Early Exit
+                            </a>
+                        {% endif %}
+                    </div>
+                    <div style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); border-radius: 12px; padding: 15px; height: 300px; display: flex; flex-direction: column;">
+                        
+                        <!-- MESSAGES CONTAINER -->
+                        <div style="flex: 1; overflow-y: auto; margin-bottom: 15px; padding-right: 5px;" id="messagesContainer">
+                            {% if messages %}
+                                {% for message in messages %}
+                                    {% if message.sender.id == user.id %}
+                                        <!-- USER MESSAGE (RIGHT) -->
+                                        <div style="display: flex; justify-content: flex-end; margin-bottom: 12px;">
+                                            <div style="background: #007bff; color: white; padding: 10px 14px; border-radius: 18px; max-width: 75%; word-wrap: break-word; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                                                <p style="margin: 0; font-size: 0.95rem;">{{ message.content }}</p>
+                                                <small style="opacity: 0.8; font-size: 0.75rem;">{{ message.created_at|date:"H:i" }}</small>
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        <!-- OTHER USER MESSAGE (LEFT) -->
+                                        <div style="display: flex; justify-content: flex-start; margin-bottom: 12px;">
+                                            <div style="background: white; color: #333; padding: 10px 14px; border-radius: 18px; max-width: 75%; word-wrap: break-word; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                                                <strong style="font-size: 0.85rem;">{{ message.sender.first_name }}</strong>
+                                                <p style="margin: 4px 0 0 0; font-size: 0.95rem;">{{ message.content }}</p>
+                                                <small style="opacity: 0.6; font-size: 0.75rem;">{{ message.created_at|date:"H:i" }}</small>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            {% else %}
+                                <div style="text-align: center; color: #666; padding: 20px 0;">
+                                    <p style="font-size: 0.9rem;">No messages yet. Start the conversation!</p>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- MESSAGE INPUT -->
+                        <form method="POST" action="{% url 'booking_messages' active_booking.id %}" style="display: flex; gap: 8px;">
+                            {% csrf_token %}
+                            <input type="text" 
+                                   name="content" 
+                                   placeholder="Type your message..." 
+                                   style="flex: 1; padding: 10px 14px; border: 1px solid #ddd; border-radius: 20px; font-size: 0.9rem; outline: none;"
+                                   autocomplete="off"
+                                   required>
+                            <button type="submit" 
+                                    style="background: #007bff; color: white; border: none; padding: 10px 16px; border-radius: 50%; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px;">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </form>
+                    </div>
+
+                    <script>
+                        // Auto-scroll to bottom
+                        const container = document.getElementById('messagesContainer');
+                        if (container) {
+                            container.scrollTop = container.scrollHeight;
+                        }
+                    </script>
+
+                {% else %}
+                    <!-- NO ACTIVE BOOKING - INSTRUCTIONS -->
+                    <p class="text-muted small mb-3">
+                        <i class="fas fa-info-circle"></i>
+                        To send direct messages and discuss bookings, make a booking request first. 
+                        Then you can message the owner from your dashboard or here!
+                    </p>
+
+                    <div class="alert alert-info">
+                        <strong>Quick Steps:</strong>
+                        <ol class="mb-0 small">
+                            <li>Request a booking with your desired dates</li>
+                            <li>Come back to this page</li>
+                            <li>Chat will appear here!</li>
+                        </ol>
+                    </div>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                {% if not active_booking %}
+                    <a href="{% url 'request_booking' property.id %}" class="btn btn-primary">
+                        <i class="fas fa-calendar"></i> Make a Booking Request
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
 </div>
 
 {% endblock %}

@@ -5,18 +5,139 @@
     <div class="row justify-content-center">
         <div class="col-md-7">
             <div class="card p-4">
-                <h3 class="mb-3">Edit Property</h3>
+                <h3 class="mb-4">Edit Property</h3>
 
                 <form method="post" enctype="multipart/form-data">
                     {% csrf_token %}
-                    {{ form.as_p }}
 
-                    <button type="submit" class="btn btn-primary">
+                    <!-- Title -->
+                    <div class="mb-3">
+                        <label class="form-label">{{ form.title.label }}</label>
+                        {{ form.title }}
+                        {% if form.title.errors %}
+                            <div class="text-danger small">{{ form.title.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Description -->
+                    <div class="mb-3">
+                        <label class="form-label">{{ form.description.label }}</label>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                            <div class="text-danger small">{{ form.description.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- City -->
+                    <div class="mb-3">
+                        <label class="form-label">{{ form.city.label }}</label>
+                        {{ form.city }}
+                        {% if form.city.errors %}
+                            <div class="text-danger small">{{ form.city.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Rent -->
+                    <div class="mb-3">
+                        <label class="form-label">{{ form.rent.label }}</label>
+                        {{ form.rent }}
+                        {% if form.rent.errors %}
+                            <div class="text-danger small">{{ form.rent.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Bedrooms -->
+                    <div class="mb-3">
+                        <label class="form-label">{{ form.bedrooms.label }}</label>
+                        {{ form.bedrooms }}
+                        {% if form.bedrooms.errors %}
+                            <div class="text-danger small">{{ form.bedrooms.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Bathrooms -->
+                    <div class="mb-3">
+                        <label class="form-label">{{ form.bathrooms.label }}</label>
+                        {{ form.bathrooms }}
+                        {% if form.bathrooms.errors %}
+                            <div class="text-danger small">{{ form.bathrooms.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Address -->
+                    <div class="mb-3">
+                        <label class="form-label">{{ form.address.label }}</label>
+                        {{ form.address }}
+                        {% if form.address.errors %}
+                            <div class="text-danger small">{{ form.address.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Latitude -->
+                    <div class="mb-3">
+                        <label class="form-label">{{ form.latitude.label }}</label>
+                        {{ form.latitude }}
+                        {% if form.latitude.errors %}
+                            <div class="text-danger small">{{ form.latitude.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Longitude -->
+                    <div class="mb-3">
+                        <label class="form-label">{{ form.longitude.label }}</label>
+                        {{ form.longitude }}
+                        {% if form.longitude.errors %}
+                            <div class="text-danger small">{{ form.longitude.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Current Images -->
+                    {% if existing_images %}
+                    <div class="mb-4">
+                        <label class="form-label"><strong>Current Property Images ({{ existing_images|length }}/4)</strong></label>
+                        <div class="d-flex gap-2" style="flex-wrap: wrap;">
+                            {% for prop_image in existing_images %}
+                                <div style="position: relative; display: inline-block;">
+                                    <img src="{{ prop_image.image.url }}"
+                                         style="height: 100px; width: 100px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd;">
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Add More Images -->
+                    <div class="mb-4">
+                        <label class="form-label">
+                            <strong>{% if existing_images %}Add More Images{% else %}Property Images <span class="text-danger">*</span>{% endif %}</strong>
+                        </label>
+                        <input type="file"
+                               name="images"
+                               multiple
+                               {% if not existing_images %}required{% endif %}
+                               accept="image/*"
+                               class="form-control">
+                        {% if image_errors %}
+                            <div class="alert alert-danger mt-2 mb-0">
+                                <strong>Image Upload Errors:</strong>
+                                <ul class="mb-0 mt-2">
+                                    {% for error in image_errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endif %}
+                        <small class="text-muted d-block mt-2">
+                            <strong>Requirements:</strong> Select 1-4 image files (JPG/PNG). Hold Ctrl (or Cmd on Mac) to select multiple files.
+                            <br>Image requirements: 640x480px to 4000x3000px, max 5MB each
+                        </small>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 mb-2">
                         Update Property
                     </button>
 
-                    <a href="{% url 'dashboard' %}"
-                       class="btn btn-secondary ms-2">
+                    <a href="{% url 'dashboard' %}" class="btn btn-secondary w-100">
                         Cancel
                     </a>
                 </form>

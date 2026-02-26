@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+    <h3>Early Exit Request #{{ exit.id }}</h3>
+    <p><strong>Booking:</strong> {{ exit.booking.property.title }} ({{ exit.booking.start_date }} to {{ exit.booking.end_date }})</p>
+    <p><strong>Status:</strong> {{ exit.get_status_display }}</p>
+    <p><strong>Desired move-out:</strong> {{ exit.desired_move_out }}</p>
+    {% if exit.owner_comments %}
+        <p><strong>Owner comments:</strong> {{ exit.owner_comments }}</p>
+    {% endif %}
+    {% if exit.inspection and exit.inspection.status == 'completed' %}
+        <hr>
+        <h5>Inspection Report</h5>
+        <p>{{ exit.inspection.notes }}</p>
+        <p><strong>Damage assessed:</strong> Rs. {{ exit.inspection.damage_assessed_amount }}</p>
+        {% if exit.inspection.images.all %}
+            <div class="row">
+                {% for img in exit.inspection.images.all %}
+                    <div class="col-md-3 mb-2">
+                        <img src="{{ img.image.url }}" class="img-fluid"/>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endif %}
+    <hr>
+    {% if user == exit.booking.property.landlord and exit.status == 'requested' %}
+        <form action="{% url 'owner_review_exit' exit.id 'approve' %}" method="post" class="d-inline">
+            {% csrf_token %}
+            <button class="btn btn-success">Approve</button>
+        </form>
+        <form action="{% url 'owner_review_exit' exit.id 'reject' %}" method="post" class="d-inline">
+            {% csrf_token %}
+            <button class="btn btn-danger">Reject</button>
+        </form>
+    {% endif %}
+
+    {% if exit.status == 'owner_approved' and user == exit.booking.property.landlord %}
+        <a href="{% url 'schedule_inspection' exit.id %}" class="btn btn-outline-primary">Schedule Inspection</a>
+    {% endif %}
+
+    {% if exit.status in 'inspection_scheduled inspection_completed settlement_confirmed' %}
+        <a href="{% url 'view_settlement' exit.id %}" class="btn btn-outline-success">View Settlement</a>
+    {% endif %}
+
+    <a href="{% url 'booking_detail' exit.booking.id %}" class="btn btn-secondary">Back to booking</a>
+</div>
+{% endblock %}

@@ -76,19 +76,27 @@
         {% if bookings %}
             <div class="list-group">
                 {% for booking in bookings %}
-                <div class="list-group-item">
-                    <strong>{{ booking.property.title }}</strong><br>
-                    {{ booking.start_date }} → {{ booking.end_date }}
-                    <div class="mt-2">
-                        {% if booking.status == 'approved' %}
-                            <span class="badge bg-success">Approved</span>
-                        {% elif booking.status == 'rejected' %}
-                            <span class="badge bg-danger">Rejected</span>
-                        {% else %}
-                            <span class="badge bg-warning text-dark">Pending</span>
-                        {% endif %}
+                <a href="{% url 'booking_detail' booking.id %}" class="list-group-item list-group-item-action">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <strong>{{ booking.property.title }}</strong><br>
+                            <small class="text-muted">{{ booking.start_date }} → {{ booking.end_date }}</small>
+                        </div>
+                        <div>
+                            {% if booking.status == 'approved' %}
+                                <span class="badge bg-success">Approved</span>
+                            {% elif booking.status == 'rejected' %}
+                                <span class="badge bg-danger">Rejected</span>
+                            {% elif booking.status == 'cancelled' %}
+                                <span class="badge bg-dark">Cancelled</span>
+                            {% elif booking.status == 'rented_out' %}
+                                <span class="badge bg-secondary">Rented Out</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">Pending</span>
+                            {% endif %}
+                        </div>
                     </div>
-                </div>
+                </a>
                 {% endfor %}
             </div>
         {% else %}
@@ -160,6 +168,7 @@
                             <a href="{% url 'manage_booking' booking.id 'reject' %}" class="btn btn-sm btn-danger">Reject</a>
                         {% elif booking.status == 'approved' %}
                             <span class="badge bg-success">Approved</span>
+                            <a href="{% url 'finalize_booking' booking.id %}" class="btn btn-sm btn-success ms-2">Finalize</a>
                         {% else %}
                             <span class="badge bg-danger">Rejected</span>
                         {% endif %}
@@ -211,13 +220,20 @@
 
                         <div class="property-carousel-card">
                             <div class="property-carousel-image">
-                                {% if property.image %}
-                                <img src="{{ property.image.url }}" alt="{{ property.title }}">
+                                {% if property.images.all %}
+                                    <img src="{{ property.images.first.image.url }}" alt="{{ property.title }}">
+                                    {% if property.images.all|length > 1 %}
+                                        <div style="position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.6); color: white; padding: 3px 6px; border-radius: 3px; font-size: 0.7rem;">
+                                            📷 {{ property.images.all|length }}
+                                        </div>
+                                    {% endif %}
+                                {% elif property.image %}
+                                    <img src="{{ property.image.url }}" alt="{{ property.title }}">
                                 {% else %}
-                                <div class="property-placeholder">
-                                    <i class="fas fa-home"></i>
-                                    <p>No image</p>
-                                </div>
+                                    <div class="property-placeholder">
+                                        <i class="fas fa-home"></i>
+                                        <p>No image</p>
+                                    </div>
                                 {% endif %}
                             </div>
                             
@@ -262,7 +278,7 @@
         <div class="carousel-indicators mt-3">
             {% for property in page_obj %}
                 {% if forloop.counter0|divisibleby:3 %}
-                <button type="button" data-bs-target="#propertiesCarousel" data-bs-slide-to="{{ forloop.counter0|divisibleby:3|yesno:'0,' }}" {% if forloop.counter0 == 0 %}class="active" aria-current="true"{% endif %} aria-label="Slide"></button>
+                <button type="button" data-bs-target="#propertiesCarousel" data-bs-slide-to="{% widthratio forloop.counter0 3 1 %}" {% if forloop.counter0 == 0 %}class="active" aria-current="true"{% endif %} aria-label="Slide"></button>
                 {% endif %}
             {% endfor %}
         </div>
@@ -450,9 +466,6 @@
                         <i class="fas fa-paper-plane"></i> Send Message
                     </button>
 
-                    <p class="text-muted small text-center mt-2">
-                        <i class="fas fa-info-circle"></i> Demo form (no backend submission)
-                    </p>
 
                 </form>
             </div>

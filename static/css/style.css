@@ -616,13 +616,19 @@
 
 .carousel-inner {
     width: 100%;
+    position: relative;
 }
 
 .carousel-item {
-    display: block;
+    display: none;
     width: 100%;
     min-height: auto;
     padding: 1.5rem 0;
+    position: relative;
+}
+
+.carousel-item.active {
+    display: block;
 }
 
 .properties-carousel-row {
