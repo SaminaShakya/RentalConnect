@@ -219,16 +219,16 @@ class EarlyExitRequest(models.Model):
             self.notice_given_days = (self.desired_move_out - date.today()).days
 
     def calculate_penalty(self):
-        # basic penalty formula: one month's rent per remaining month or as configured
-        if self.booking.monthly_rent:
-            remaining_days = (self.booking.end_date - self.desired_move_out).days
-            remaining_months = remaining_days / 30
-            rate = 1.0
-            if self.booking.lock_in_months and remaining_months < self.booking.lock_in_months:
-                rate = 1.5  # higher penalty during lock-in
-            self.penalty_amount = self.booking.monthly_rent * remaining_months * rate
-            if self.penalty_amount < 0:
-                self.penalty_amount = 0
+        # new business rule: tenant forfeits half of the security deposit as penalty,
+        # plus any damage fee assessed later during inspection.  The damage amount
+        # itself is stored in `deductions` and handled during settlement.
+        from decimal import Decimal
+        deposit = self.booking.security_deposit or Decimal(0)
+        # simply take half the deposit regardless of dates; future enhancement
+        # could prorate based on time lived (not implemented here yet).
+        self.penalty_amount = deposit / Decimal(2)
+        if self.penalty_amount < 0:
+            self.penalty_amount = Decimal(0)
 
     def save(self, *args, **kwargs):
         self.calculate_notice()
@@ -269,12 +269,19 @@ class Settlement(models.Model):
     notes = models.TextField(blank=True)
 
     def calculate(self):
-        # compute dues and credits using data from exit_request and booking
-        self.total_due = self.exit_request.penalty_amount
-        # include unpaid rent if any (not tracked here, assume 0)
-        self.total_credit = (self.exit_request.booking.security_deposit or 0) - self.exit_request.deductions
-        self.net_refund_to_tenant = max(self.total_credit - self.total_due, 0)
-        self.net_payable_to_owner = max(self.total_due - self.total_credit, 0)
+        # compute settlement according to simplified deposit rule:
+        # - penalty = half of the security deposit plus any damage deductions
+        # - tenant keeps whatever remains of the deposit after penalty & damages
+        from decimal import Decimal
+        deposit = self.exit_request.booking.security_deposit or Decimal(0)
+        half_dep = deposit / Decimal(2)
+        damage = self.exit_request.deductions or Decimal(0)
+        self.total_due = half_dep + damage
+        # amount of deposit remaining for tenant
+        self.total_credit = deposit - self.total_due
+        # net fields for ease of display; deposit covers the due amount in most cases
+        self.net_refund_to_tenant = max(self.total_credit, Decimal(0))
+        self.net_payable_to_owner = max(self.total_due - deposit, Decimal(0))
 
     def save(self, *args, **kwargs):
         self.calculate()

@@ -27,6 +27,11 @@ urlpatterns = [
     # Generic booking management action (approve/reject)
     path('booking/<int:booking_id>/<str:action>/', views.manage_booking, name='manage_booking'),
 
+    # Property appointments/viewings
+    path('property/<int:property_id>/appointment/', views.request_appointment, name='request_appointment'),
+    path('property/<int:property_id>/appointments/', views.view_appointments, name='view_appointments'),
+    path('appointment/<int:appointment_id>/<str:action>/', views.manage_appointment, name='manage_appointment'),
+
     # Early exit
     path('booking/<int:booking_id>/exit/request/', views.request_early_exit, name='request_early_exit'),
     path('exit/<int:exit_id>/', views.early_exit_detail, name='early_exit_detail'),

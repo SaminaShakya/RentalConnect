@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-calendar-check"></i> Request Property Viewing Appointment
+                    </h4>
+                </div>
+
+                <div class="card-body">
+                    {% if success and appointment %}
+                        <div class="alert alert-success">
+                            <h5>✓ Appointment Requested Successfully</h5>
+                            <p>Your viewing appointment request for <strong>{{ property.title }}</strong> has been sent to the landlord.</p>
+                            <hr>
+                            <p class="mb-2"><strong>Appointment Date:</strong> {{ appointment.appointment_date|date:"M d, Y" }}</p>
+                            <p class="mb-2"><strong>Appointment Time:</strong> {{ appointment.appointment_time|time:"H:i" }}</p>
+                            <p class="mb-0 text-muted">The landlord will confirm or reject your request. You'll receive a notification when they respond.</p>
+                        </div>
+                        <a href="{% url 'property_detail' property.id %}" class="btn btn-primary w-100 mb-2">
+                            Back to Property
+                        </a>
+                        <a href="{% url 'dashboard' %}" class="btn btn-secondary w-100">
+                            Go to Dashboard
+                        </a>
+                    {% elif error %}
+                        <div class="alert alert-danger">
+                            <strong>Error:</strong> {{ error }}
+                        </div>
+                        <a href="{% url 'property_detail' property.id %}" class="btn btn-secondary w-100">
+                            ← Back to Property
+                        </a>
+                    {% else %}
+                        <!-- Property Summary -->
+                        <div class="mb-4 p-3 bg-light rounded">
+                            <h5>Property Details</h5>
+                            <p class="mb-2"><strong>{{ property.title }}</strong></p>
+                            <p class="mb-2"><i class="fas fa-map-marker-alt"></i> {{ property.city }}, {{ property.address }}</p>
+                            <p class="mb-2"><i class="fas fa-bed"></i> {{ property.bedrooms }} Bedrooms | <i class="fas fa-bath"></i> {{ property.bathrooms }} Bathrooms</p>
+                            <p class="mb-0"><strong>Rs. {{ property.rent }}/month</strong></p>
+                        </div>
+
+                        <!-- Appointment Form -->
+                        <form method="post">
+                            {% csrf_token %}
+
+                            <div class="mb-3">
+                                <label for="appointment_date" class="form-label">
+                                    <strong>Preferred Date <span class="text-danger">*</span></strong>
+                                </label>
+                                <input type="date"
+                                       id="appointment_date"
+                                       name="appointment_date"
+                                       class="form-control"
+                                       min="{{ min_date }}"
+                                       required>
+                                <small class="text-muted">Select a date to view the property</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="appointment_time" class="form-label">
+                                    <strong>Preferred Time <span class="text-danger">*</span></strong>
+                                </label>
+                                <input type="time"
+                                       id="appointment_time"
+                                       name="appointment_time"
+                                       class="form-control"
+                                       required>
+                                <small class="text-muted">Select a time slot (landlord may suggest alternatives)</small>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="message" class="form-label">
+                                    <strong>Message to Landlord</strong>
+                                </label>
+                                <textarea id="message"
+                                          name="message"
+                                          class="form-control"
+                                          rows="3"
+                                          placeholder="Ask any questions about the property... (optional)"></textarea>
+                                <small class="text-muted">E.g., Do you allow pets? Is parking included? What utilities are included?</small>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary w-100 mb-2">
+                                <i class="fas fa-check"></i> Request Appointment
+                            </button>
+
+                            <a href="{% url 'property_detail' property.id %}" class="btn btn-secondary w-100">
+                                ← Back to Property
+                            </a>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

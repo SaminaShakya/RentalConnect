@@ -38,7 +38,7 @@ class Profile(models.Model):
 class Notification(models.Model):
     """
     Simple in-app notifications.
-    Stored in DB and shown in the UI (not push/websocket).
+    Stored in DB and shown in the UI.
     """
     recipient = models.ForeignKey(
         settings.AUTH_USER_MODEL,

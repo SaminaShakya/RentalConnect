@@ -1,5 +1,5 @@
 from django import forms
-from .models import Property, Booking, PropertyVerificationRequest, PropertyImage
+from .models import Property, Booking, PropertyVerificationRequest, PropertyImage, PropertyAppointment
 from datetime import date
 
 
@@ -91,9 +91,11 @@ class PropertyVerificationRequestForm(forms.ModelForm):
 
 # ============ Early Exit Forms ============
 
+from .models import EarlyExitRequest, InspectionReport
+
 class EarlyExitRequestForm(forms.ModelForm):
     class Meta:
-        model = None  # will set in __init__
+        model = EarlyExitRequest
         fields = ['desired_move_out']
         widgets = {
             'desired_move_out': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
@@ -102,7 +104,6 @@ class EarlyExitRequestForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.booking = kwargs.pop('booking', None)
         super().__init__(*args, **kwargs)
-        self.Meta.model = __import__('listings.models', fromlist=['EarlyExitRequest']).EarlyExitRequest
 
     def clean_desired_move_out(self):
         date_val = self.cleaned_data.get('desired_move_out')
@@ -128,7 +129,7 @@ class InspectionReportForm(forms.ModelForm):
     )
 
     class Meta:
-        model = __import__('listings.models', fromlist=['InspectionReport']).InspectionReport
+        model = InspectionReport
         fields = ['scheduled_date', 'notes', 'images']
         widgets = {
             'scheduled_date': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control'}),
@@ -139,3 +140,32 @@ class InspectionReportForm(forms.ModelForm):
 class SettlementActionForm(forms.Form):
     action = forms.ChoiceField(choices=(('accept','Accept'),('dispute','Dispute')))
     comments = forms.CharField(required=False, widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3}))
+
+class PropertyAppointmentForm(forms.ModelForm):
+    """Form for requesting property viewing appointments"""
+    class Meta:
+        model = PropertyAppointment
+        fields = ['appointment_date', 'appointment_time', 'message']
+        widgets = {
+            'appointment_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'appointment_time': forms.TimeInput(attrs={'type': 'time', 'class': 'form-control'}),
+            'message': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Any questions or special requests? (optional)'
+            }),
+        }
+
+
+class BookingCancellationForm(forms.Form):
+    """Form for cancelling a booking"""
+    cancellation_reason = forms.CharField(
+        label='Cancellation Reason',
+        widget=forms.Textarea(attrs={
+            'class': 'form-control',
+            'rows': 4,
+            'placeholder': 'Please explain why you want to cancel this booking...'
+        }),
+        min_length=10,
+        max_length=1000
+    )

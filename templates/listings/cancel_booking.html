@@ -1,26 +1,79 @@
 {% extends "base.html" %}
 {% block content %}
+
 <div class="container mt-5">
-    <h3>Cancel Booking</h3>
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-times-circle"></i> Cancel Booking
+                    </h4>
+                </div>
 
-    {% if error %}
-        <div class="alert alert-danger">{{ error }}</div>
-    {% endif %}
+                <div class="card-body">
+                    {% if error %}
+                        <div class="alert alert-danger">
+                            <strong>Cannot Cancel:</strong> {{ error }}
+                        </div>
+                        <a href="{% url 'booking_detail' booking.id %}" class="btn btn-secondary w-100">
+                            ← Back to Booking
+                        </a>
+                    {% elif success %}
+                        <div class="alert alert-success">
+                            <h5>✓ Booking Cancelled Successfully</h5>
+                            <p>Your booking for <strong>{{ booking.property.title }}</strong> has been cancelled.</p>
+                            <p class="mb-0 text-muted">The landlord has been notified of your cancellation.</p>
+                        </div>
+                        <a href="{% url 'dashboard' %}" class="btn btn-primary w-100">
+                            Go to Dashboard
+                        </a>
+                    {% else %}
+                        <!-- Booking Summary -->
+                        <div class="mb-4 p-3 bg-light rounded">
+                            <h5>Booking Details</h5>
+                            <p class="mb-2"><strong>Property:</strong> {{ booking.property.title }}</p>
+                            <p class="mb-2"><strong>Check-in:</strong> {{ booking.start_date|date:"M d, Y" }}</p>
+                            <p class="mb-2"><strong>Check-out:</strong> {{ booking.end_date|date:"M d, Y" }}</p>
+                            <p class="mb-0"><strong>Monthly Rent:</strong> Rs. {{ booking.monthly_rent }}</p>
+                        </div>
 
-    <p>
-        Are you sure you want to cancel your booking for 
-        <strong>{{ booking.property.title }}</strong> 
-        ({{ booking.start_date }} &rarr; {{ booking.end_date }})?
-    </p>
+                        <!-- Warning Message -->
+                        <div class="alert alert-warning mb-4">
+                            <strong>⚠ Note:</strong> Once you cancel this booking, you can request a new booking 
+                            for different dates. The landlord will be notified of your cancellation.
+                        </div>
 
-    <form method="post">
-        {% csrf_token %}
-        <div class="mb-3">
-            <label for="cancellation_reason" class="form-label">Reason for cancellation</label>
-            <textarea class="form-control" name="cancellation_reason" id="cancellation_reason" rows="3" required>{{ request.POST.cancellation_reason }}</textarea>
+                        <!-- Cancellation Form -->
+                        <form method="post">
+                            {% csrf_token %}
+
+                            <div class="mb-4">
+                                <label class="form-label">
+                                    <strong>Cancellation Reason <span class="text-danger">*</span></strong>
+                                </label>
+                                <textarea name="cancellation_reason"
+                                          class="form-control"
+                                          rows="4"
+                                          placeholder="Please explain why you want to cancel this booking..."
+                                          required></textarea>
+                                <small class="text-muted d-block mt-2">
+                                    Please provide a reason so the landlord understands your situation.
+                                </small>
+                            </div>
+
+                            <button type="submit" class="btn btn-danger w-100 mb-2">
+                                <i class="fas fa-check"></i> Confirm Cancellation
+                            </button>
+
+                            <a href="{% url 'booking_detail' booking.id %}" class="btn btn-secondary w-100">
+                                ← Back to Booking
+                            </a>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
         </div>
-        <button type="submit" class="btn btn-danger">Confirm Cancel</button>
-        <a href="{% url 'booking_detail' booking.id %}" class="btn btn-secondary">Back</a>
-    </form>
+    </div>
 </div>
-{% endblock %}
+

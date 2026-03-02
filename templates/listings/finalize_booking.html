@@ -1,23 +1,72 @@
 {% extends "base.html" %}
 {% block content %}
+
 <div class="container mt-5">
-    <h3>Finalize Booking</h3>
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-check-circle"></i> Finalize Booking
+                    </h4>
+                </div>
 
-    {% if error %}
-        <div class="alert alert-danger">{{ error }}</div>
-    {% endif %}
+                <div class="card-body">
+                    {% if error %}
+                        <div class="alert alert-danger">
+                            <strong>Cannot Finalize:</strong> {{ error }}
+                        </div>
+                        <a href="{% url 'booking_detail' booking.id %}" class="btn btn-secondary w-100">
+                            ← Back to Booking
+                        </a>
+                    {% elif success %}
+                        <div class="alert alert-success">
+                            <h5>✓ Booking Finalized</h5>
+                            <p>The booking for <strong>{{ booking.property.title }}</strong> is now marked as <strong>Rented Out</strong>.</p>
+                            <p class="mb-0 text-muted">Tenant has been notified.</p>
+                        </div>
+                        <a href="{% url 'dashboard' %}" class="btn btn-primary w-100">
+                            Go to Dashboard
+                        </a>
+                    {% else %}
+                        <!-- Booking Summary -->
+                        <div class="mb-4 p-3 bg-light rounded">
+                            <h5>Booking Details</h5>
+                            <p class="mb-2"><strong>Tenant:</strong> {{ booking.tenant.get_full_name|default:booking.tenant.username }}</p>
+                            <p class="mb-2"><strong>Property:</strong> {{ booking.property.title }}</p>
+                            <p class="mb-2"><strong>Check-in:</strong> {{ booking.start_date|date:"M d, Y" }}</p>
+                            <p class="mb-2"><strong>Check-out:</strong> {{ booking.end_date|date:"M d, Y" }}</p>
+                            <p class="mb-2"><strong>Monthly Rent:</strong> Rs. {{ booking.monthly_rent }}</p>
+                            <p class="mb-0"><strong>Security Deposit:</strong> Rs. {{ booking.security_deposit }}</p>
+                        </div>
 
-    <p>
-        You are about to mark the booking for 
-        <strong>{{ booking.property.title }}</strong> 
-        ({{ booking.start_date }} &rarr; {{ booking.end_date }}) as <strong>Rented Out</strong>.
-    </p>
-    <p>This action notifies the tenant and records the finalization time.</p>
+                        <!-- Status Update Message -->
+                        <div class="alert alert-info mb-4">
+                            <strong>ℹ️ Status Change:</strong> This booking will be marked as "Rented Out", 
+                            indicating that the property is occupied and the tenancy has officially started.
+                        </div>
 
-    <form method="post">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-success">Finalize Booking</button>
-        <a href="{% url 'booking_detail' booking.id %}" class="btn btn-secondary">Back</a>
-    </form>
+                        <!-- Finalization Form -->
+                        <form method="post">
+                            {% csrf_token %}
+
+                            <p class="text-muted mb-3">
+                                Once you finalize this booking, the tenant will be notified that everything is confirmed 
+                                and they can proceed with check-in on {{ booking.start_date|date:"M d, Y" }}.
+                            </p>
+
+                            <button type="submit" class="btn btn-success w-100 mb-2">
+                                <i class="fas fa-check"></i> Confirm Finalization
+                            </button>
+
+                            <a href="{% url 'booking_detail' booking.id %}" class="btn btn-secondary w-100">
+                                ← Back to Booking
+                            </a>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
-{% endblock %}
+

@@ -10,6 +10,7 @@ from .models import (
     Settlement,
     InspectionImage,
     PropertyImage,
+    PropertyAppointment,
 )
 from users.models import Notification
 
@@ -144,3 +145,10 @@ class BookingMessageAdmin(admin.ModelAdmin):
     list_filter = ('is_read', 'created_at')
     search_fields = ('booking__property__title', 'sender__username', 'content')
     readonly_fields = ('created_at', 'booking', 'sender')
+
+@admin.register(PropertyAppointment)
+class PropertyAppointmentAdmin(admin.ModelAdmin):
+    list_display = ('property', 'tenant', 'appointment_date', 'appointment_time', 'status', 'created_at')
+    list_filter = ('status', 'appointment_date')
+    search_fields = ('property__title', 'tenant__username')
+    readonly_fields = ('created_at', 'updated_at')

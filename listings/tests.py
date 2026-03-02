@@ -117,17 +117,14 @@ class EarlyExitTests(TestCase):
         )
 
     def test_create_exit_request_and_penalty(self):
-        # request move out 2 months early (60 days remaining)
+        # penalty should equal half the security deposit by default
         desired = timezone.now().date() + timedelta(days=60)
         exit_req = EarlyExitRequest.objects.create(
             booking=self.booking,
             desired_move_out=desired,
         )
-        # notice should be computed
         self.assertIsNotNone(exit_req.notice_given_days)
-        # penalty should be positive and roughly rent*2
-        self.assertGreater(exit_req.penalty_amount, 0)
-        self.assertTrue(exit_req.penalty_amount >= 1000)
+        self.assertEqual(exit_req.penalty_amount, self.booking.security_deposit / 2)
 
     def test_settlement_calculation(self):
         desired = timezone.now().date() + timedelta(days=60)
@@ -135,14 +132,16 @@ class EarlyExitTests(TestCase):
             booking=self.booking,
             desired_move_out=desired,
         )
-        # simulate inspection deduction
+        # simulate inspection damage amount
         exit_req.deductions = 500
         exit_req.save()
         sett = Settlement.objects.create(exit_request=exit_req, lease=self.booking)
-        # computed values should match formula
-        self.assertEqual(sett.total_due, exit_req.penalty_amount)
-        self.assertEqual(sett.total_credit, 2000 - 500)
-        self.assertEqual(sett.net_refund_to_tenant, max(sett.total_credit - sett.total_due, 0))
+        # penalty should be half deposit + damage
+        self.assertEqual(sett.total_due, (self.booking.security_deposit / 2) + 500)
+        # tenant keeps whatever remains of the deposit
+        self.assertEqual(sett.total_credit, self.booking.security_deposit - sett.total_due)
+        # net refund should equal remaining credit (never negative)
+        self.assertEqual(sett.net_refund_to_tenant, max(sett.total_credit, 0))
 
     def test_inspection_image_upload(self):
         from django.core.files.uploadedfile import SimpleUploadedFile
@@ -228,7 +227,7 @@ class LocationSearchTests(TestCase):
         client = self.client
         start_lat = 0.0
         start_lng = 0.1
-        response = client.get(f"/properties/?lat={start_lat}&lng={start_lng}")
+        response = client.get(f"/listings/properties/?lat={start_lat}&lng={start_lng}")
         self.assertEqual(response.status_code, 200)
         props = response.context['page_obj'].object_list
         # first property should be prop1
@@ -280,7 +279,7 @@ class BookingActionTests(TestCase):
         logged = client.login(username="tenant_act", password="password123")
         self.assertTrue(logged, "tenant login failed")
         # Django test client automatically handles CSRF
-        response = client.post(f"/booking/{self.booking.id}/cancel/", {
+        response = client.post(f"/listings/booking/{self.booking.id}/cancel/", {
             'cancellation_reason': 'Change of plans'
         })
         print('TEST DEBUG: cancel response', response.status_code)
@@ -294,7 +293,7 @@ class BookingActionTests(TestCase):
         client = self.client
         logged = client.login(username="landlord_act", password="password123")
         self.assertTrue(logged, "landlord login failed")
-        response = client.post(f"/booking/{self.booking.id}/finalize/", {})
+        response = client.post(f"/listings/booking/{self.booking.id}/finalize/", {})
         print('TEST DEBUG: finalize response', response.status_code)
         self.assertEqual(response.status_code, 302)
         self.booking.refresh_from_db()
@@ -307,7 +306,7 @@ class BookingActionTests(TestCase):
         client = self.client
         logged = client.login(username="tenant_act", password="password123")
         self.assertTrue(logged, "tenant login failed for messaging")
-        response = client.post(f"/booking/{self.booking.id}/messages/", {'message': 'Hello!'} )
+        response = client.post(f"/listings/booking/{self.booking.id}/messages/", {'message': 'Hello!'} )
         print('TEST DEBUG: message post response', response.status_code)
         self.assertEqual(response.status_code, 302)
         # message should exist and unread for landlord
@@ -319,7 +318,7 @@ class BookingActionTests(TestCase):
         # landlord views messages, which should mark it read
         client.logout()
         client.login(username="landlord_act", password="password123")
-        resp2 = client.get(f"/booking/{self.booking.id}/messages/")
+        resp2 = client.get(f"/listings/booking/{self.booking.id}/messages/")
         self.assertEqual(resp2.status_code, 200)
         msg.refresh_from_db()
         self.assertTrue(msg.is_read)

@@ -1285,3 +1285,60 @@ Traceback (most recent call last):
     raise ValueError("ModelForm has no model class specified.")
 ValueError: ModelForm has no model class specified.
 ERROR 2026-02-26 08:51:15,771 log 17112 16244 "GET /booking/6/exit/request/ HTTP/1.1" 500 89412
+ERROR 2026-02-26 08:57:11,796 log 21692 8484 Internal Server Error: /booking/6/exit/request/
+Traceback (most recent call last):
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\core\handlers\base.py", line 198, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "D:\Docs\PROJECT\rentalConnect\listings\views.py", line 266, in request_early_exit
+    ex.save()
+    ~~~~~~~^^
+  File "D:\Docs\PROJECT\rentalConnect\listings\models.py", line 235, in save
+    self.calculate_penalty()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Docs\PROJECT\rentalConnect\listings\models.py", line 229, in calculate_penalty
+    self.penalty_amount = self.booking.monthly_rent * remaining_months * rate
+                          ~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~
+TypeError: unsupported operand type(s) for *: 'decimal.Decimal' and 'float'
+ERROR 2026-02-26 08:57:11,802 log 21692 8484 "POST /booking/6/exit/request/ HTTP/1.1" 500 88960
+ERROR 2026-02-26 09:01:42,248 log 16672 18120 Internal Server Error: /booking/6/exit/request/
+Traceback (most recent call last):
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\core\handlers\base.py", line 198, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "D:\Docs\PROJECT\rentalConnect\listings\views.py", line 266, in request_early_exit
+    ex.save()
+    ~~~~~~~^^
+  File "D:\Docs\PROJECT\rentalConnect\listings\models.py", line 235, in save
+    self.calculate_penalty()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Docs\PROJECT\rentalConnect\listings\models.py", line 229, in calculate_penalty
+    self.penalty_amount = self.booking.monthly_rent * remaining_months * rate
+                          ~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~
+TypeError: unsupported operand type(s) for *: 'decimal.Decimal' and 'float'
+ERROR 2026-02-26 09:01:42,255 log 16672 18120 "POST /booking/6/exit/request/ HTTP/1.1" 500 88960
+ERROR 2026-02-26 09:02:22,441 log 16672 18120 Internal Server Error: /booking/6/exit/request/
+Traceback (most recent call last):
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\core\handlers\base.py", line 198, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "D:\Docs\PROJECT\rentalConnect\listings\views.py", line 266, in request_early_exit
+    ex.save()
+    ~~~~~~~^^
+  File "D:\Docs\PROJECT\rentalConnect\listings\models.py", line 235, in save
+    self.calculate_penalty()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Docs\PROJECT\rentalConnect\listings\models.py", line 229, in calculate_penalty
+    self.penalty_amount = self.booking.monthly_rent * remaining_months * rate
+                          ~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~
+TypeError: unsupported operand type(s) for *: 'decimal.Decimal' and 'float'
+ERROR 2026-02-26 09:02:22,447 log 16672 18120 "POST /booking/6/exit/request/ HTTP/1.1" 500 88960
