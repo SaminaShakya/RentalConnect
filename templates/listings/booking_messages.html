@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 {% block content %}
 
 <div class="container-fluid mt-4 mb-4">
@@ -16,7 +17,7 @@
                             </p>
                         </div>
                         <div class="col-auto">
-                            <span class="badge 
+                            <span class="badge
                                 {% if booking.status == 'approved' %}bg-success
                                 {% elif booking.status == 'rejected' %}bg-danger
                                 {% else %}bg-warning text-dark{% endif %}">
@@ -29,7 +30,7 @@
 
             <!-- CHAT CONTAINER -->
             <div class="card border-0 shadow-sm" style="height: 600px; display: flex; flex-direction: column;">
-                
+
                 <!-- MESSAGES AREA -->
                 <div class="card-body overflow-auto flex-grow-1 p-4" id="messagesArea" style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);">
                     {% if messages %}
@@ -48,7 +49,7 @@
                                     </strong>
                                     <span class="ms-2">{{ message.created_at|date:"g:i A" }}</span>
                                 </div>
-                                
+
                                 <!-- Message Bubble -->
                                 <div class="p-3 rounded-lg {% if message.sender == request.user %}bg-primary text-white rounded-end-0{% else %}bg-white border border-light rounded-start-0{% endif %}" style="box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
                                     <p class="mb-0" style="line-height: 1.5;">{{ message.content|linebreaks }}</p>
@@ -69,17 +70,18 @@
 
                 <!-- MESSAGE INPUT FOOTER -->
                 <div class="card-footer bg-white border-top p-0">
-                    <form method="post" class="p-3">
+                    <form method="post" class="p-3" id="messageForm">
                         {% csrf_token %}
                         <div class="input-group">
-                            <textarea 
+                            <textarea
                                 name="message"
+                                id="messageInput"
                                 class="form-control border-0"
                                 placeholder="Type a message..."
                                 rows="2"
                                 style="resize: none; padding: 12px 15px;"
                                 required></textarea>
-                            <button type="submit" class="btn btn-primary">
+                            <button type="submit" class="btn btn-primary" id="sendButton">
                                 <i class="fas fa-paper-plane"></i> Send
                             </button>
                         </div>
@@ -105,7 +107,7 @@
                         <i class="fas fa-times-circle"></i> <strong>Booking Rejected</strong> by the property owner.
                     </div>
                 {% endif %}
-                
+
                 <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary btn-lg ms-auto">
                     <i class="fas fa-arrow-left"></i> Back to Dashboard
                 </a>
@@ -118,35 +120,201 @@
     #messagesArea {
         scroll-behavior: smooth;
     }
-    
+
     .rounded-lg {
         border-radius: 12px;
     }
-    
+
     .bg-primary {
         background-color: #0d6efd !important;
     }
-    
+
     /* Chat message styling */
     .card-body .p-3 {
         word-wrap: break-word;
         overflow-wrap: break-word;
     }
-    
+
     /* Responsive adjustments */
     @media (max-width: 576px) {
         div[style*="max-width: 70%"] {
             max-width: 85% !important;
         }
     }
+
+    /* Connection status indicator */
+    .connection-status {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        display: none;
+    }
+
+    .connection-status.connected {
+        background-color: #28a745;
+        color: white;
+    }
+
+    .connection-status.disconnected {
+        background-color: #dc3545;
+        color: white;
+    }
 </style>
 
+<!-- Connection Status Indicator -->
+<div id="connectionStatus" class="connection-status">
+    <i class="fas fa-circle"></i> <span id="statusText">Connecting...</span>
+</div>
+
 <script>
-    // Auto-scroll to latest message
+    let chatSocket = null;
+    let reconnectAttempts = 0;
+    const maxReconnectAttempts = 5;
+    const reconnectDelay = 3000;
+
+    function connectWebSocket() {
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${window.location.host}/ws/booking/{{ booking.id }}/messages/`;
+
+        chatSocket = new WebSocket(wsUrl);
+
+        chatSocket.onopen = function(e) {
+            console.log('WebSocket connected');
+            updateConnectionStatus(true);
+            reconnectAttempts = 0;
+        };
+
+        chatSocket.onclose = function(e) {
+            console.log('WebSocket disconnected');
+            updateConnectionStatus(false);
+
+            // Attempt to reconnect
+            if (reconnectAttempts < maxReconnectAttempts) {
+                reconnectAttempts++;
+                setTimeout(connectWebSocket, reconnectDelay);
+            }
+        };
+
+        chatSocket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            if (data.type === 'new_message') {
+                appendMessage(data.message);
+            }
+        };
+
+        chatSocket.onerror = function(e) {
+            console.error('WebSocket error:', e);
+        };
+    }
+
+    function updateConnectionStatus(connected) {
+        const statusEl = document.getElementById('connectionStatus');
+        const statusText = document.getElementById('statusText');
+
+        if (connected) {
+            statusEl.className = 'connection-status connected';
+            statusText.textContent = 'Real-time';
+        } else {
+            statusEl.className = 'connection-status disconnected';
+            statusText.textContent = 'Offline';
+        }
+
+        statusEl.style.display = 'block';
+    }
+
+    function appendMessage(message) {
+        const messagesArea = document.getElementById('messagesArea');
+        const isCurrentUser = message.sender === '{{ request.user.username }}';
+
+        const messageHtml = `
+            <div class="d-flex mb-3 ${isCurrentUser ? 'justify-content-end' : 'justify-content-start'}">
+                <div style="max-width: 70%; word-wrap: break-word;">
+                    <div class="small ${isCurrentUser ? 'text-end text-muted' : 'text-muted'} mb-1">
+                        <strong>
+                            ${isCurrentUser ? 'You ({{ user_role }})' : message.sender}
+                        </strong>
+                        <span class="ms-2">${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                    </div>
+                    <div class="p-3 rounded-lg ${isCurrentUser ? 'bg-primary text-white rounded-end-0' : 'bg-white border border-light rounded-start-0'}" style="box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                        <p class="mb-0" style="line-height: 1.5;">${message.content.replace(/\n/g, '<br>')}</p>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        messagesArea.insertAdjacentHTML('beforeend', messageHtml);
+        messagesArea.scrollTop = messagesArea.scrollHeight;
+
+        // Show notification if message is from other user
+        if (!isCurrentUser && document.hidden) {
+            showNotification('New message received', message.content.substring(0, 50) + '...');
+        }
+    }
+
+    function sendMessage(content) {
+        if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
+            chatSocket.send(JSON.stringify({
+                'type': 'send_message',
+                'content': content
+            }));
+        } else {
+            // Fallback to HTTP POST if WebSocket is not available
+            const form = document.getElementById('messageForm');
+            const formData = new FormData(form);
+            formData.set('message', content);
+
+            fetch(window.location.href, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            }).then(() => {
+                location.reload(); // Refresh to show the message
+            });
+        }
+    }
+
+    function showNotification(title, body) {
+        if ('Notification' in window && Notification.permission === 'granted') {
+            new Notification(title, { body: body });
+        }
+    }
+
+    // Initialize WebSocket connection
     document.addEventListener('DOMContentLoaded', function() {
         const messagesArea = document.getElementById('messagesArea');
         messagesArea.scrollTop = messagesArea.scrollHeight;
+
+        // Request notification permission
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+
+        connectWebSocket();
+
+        // Handle form submission
+        document.getElementById('messageForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const input = document.getElementById('messageInput');
+            const content = input.value.trim();
+
+            if (content) {
+                sendMessage(content);
+                input.value = '';
+            }
+        });
+    });
+
+    // Handle page visibility changes
+    document.addEventListener('visibilitychange', function() {
+        if (!document.hidden && chatSocket && chatSocket.readyState !== WebSocket.OPEN) {
+            connectWebSocket();
+        }
     });
 </script>
-
 {% endblock %}

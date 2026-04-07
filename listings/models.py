@@ -62,7 +62,7 @@ class Booking(models.Model):
         ('completed', 'Completed'),      # Tenancy ended normally
     )
 
-    tenant = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    tenant = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='bookings_as_tenant')
     property = models.ForeignKey(Property, on_delete=models.CASCADE)
     start_date = models.DateField(db_index=True)  # Added index
     end_date = models.DateField(db_index=True)    # Added index
@@ -94,8 +94,15 @@ class Booking(models.Model):
         """
         today = date.today()
         
-        # Validate start date is not in the past (allow today and future)
-        if self.start_date < today:
+        # Validate start date is not in the past (allow today and future).
+        # Skip this check when an existing booking is being finalized without changing dates.
+        date_has_changed = True
+        if self.pk:
+            original = Booking.objects.filter(pk=self.pk).only('start_date', 'end_date').first()
+            if original and original.start_date == self.start_date and original.end_date == self.end_date:
+                date_has_changed = False
+
+        if date_has_changed and self.start_date < today:
             raise ValidationError("Start date must be today or in the future.")
         
         # Validate end date is after start date
@@ -267,6 +274,23 @@ class Settlement(models.Model):
     calculated_on = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=20, choices=(('draft','Draft'),('tenant_accepted','Tenant Accepted'),('owner_accepted','Owner Accepted'),('disputed','Disputed'),('completed','Completed')), default='draft', db_index=True)
     notes = models.TextField(blank=True)
+
+    # Payment gateway fields
+    payment_gateway = models.CharField(max_length=20, choices=(
+        ('stripe', 'Stripe'),
+        ('esewa', 'eSewa'),
+        ('khalti', 'Khalti'),
+    ), blank=True, null=True)
+    payment_status = models.CharField(max_length=20, choices=(
+        ('pending', 'Pending'),
+        ('processing', 'Processing'),
+        ('completed', 'Completed'),
+        ('failed', 'Failed'),
+        ('refunded', 'Refunded'),
+    ), default='pending', db_index=True)
+    payment_id = models.CharField(max_length=255, blank=True, null=True)  # Gateway transaction ID
+    payment_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    payment_completed_at = models.DateTimeField(blank=True, null=True)
 
     def calculate(self):
         # compute settlement according to simplified deposit rule:

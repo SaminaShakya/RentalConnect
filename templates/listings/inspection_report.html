@@ -1,13 +1,35 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="container mt-5">
-    <h3>Inspection Report for Exit #{{ exit.id }}</h3>
+    <h3>Inspection Report for {{ exit.booking.property.title }}</h3>
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
-        <!-- checklist would normally be a complex widget; using textarea for now -->
+        <div class="mb-4">
+            <p class="mb-2 text-muted">Record the condition of the property in each area below.</p>
+        </div>
         <div class="mb-3">
-            <label for="checklist">Checklist (JSON)</label>
-            <textarea name="checklist" id="checklist" class="form-control" rows="4">{{ inspection.checklist }}</textarea>
+            {{ form.walls.label_tag }}
+            {{ form.walls }}
+        </div>
+        <div class="mb-3">
+            {{ form.floors.label_tag }}
+            {{ form.floors }}
+        </div>
+        <div class="mb-3">
+            {{ form.doors_windows.label_tag }}
+            {{ form.doors_windows }}
+        </div>
+        <div class="mb-3">
+            {{ form.plumbing.label_tag }}
+            {{ form.plumbing }}
+        </div>
+        <div class="mb-3">
+            {{ form.appliances.label_tag }}
+            {{ form.appliances }}
+        </div>
+        <div class="mb-3">
+            {{ form.cleanliness.label_tag }}
+            {{ form.cleanliness }}
         </div>
         <div class="mb-3">
             {{ form.notes.label_tag }}

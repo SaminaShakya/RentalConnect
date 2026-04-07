@@ -2,10 +2,8 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 
-from .models import CustomUser, Profile
+from .models import Profile, Notification
 from .forms import ProfileForm, SimpleRegisterForm
-from .models import Notification
-from listings.models import Property, Booking
 
 
 # =========================

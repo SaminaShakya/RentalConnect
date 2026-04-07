@@ -1,41 +1,8 @@
 from django import forms
 from django.contrib.auth import password_validation
-from django.contrib.auth.forms import UserCreationForm
 from django.core.exceptions import ValidationError
 
 from .models import CustomUser, Profile
-
-
-class UserRegisterForm(UserCreationForm):
-    ROLE_CHOICES = (
-        ('tenant', 'Tenant'),
-        ('landlord', 'Landlord'),
-    )
-
-    role = forms.ChoiceField(
-        choices=ROLE_CHOICES,
-        widget=forms.RadioSelect
-    )
-
-    class Meta:
-        model = CustomUser
-        fields = ['username', 'email', 'password1', 'password2']
-
-    def save(self, commit=True):
-        user = super().save(commit=False)
-        role = self.cleaned_data.get('role')
-
-        if role == 'tenant':
-            user.is_tenant = True
-        elif role == 'landlord':
-            user.is_landlord = True
-
-        # Normalize email to avoid duplicates differing by case/whitespace
-        user.email = (user.email or "").strip().lower()
-
-        if commit:
-            user.save()
-        return user
 
 
 class ProfileForm(forms.ModelForm):

@@ -1,0 +1,279 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 px-0">
+            <div class="bg-dark text-white min-vh-100 p-3">
+                <h5 class="mb-4">
+                    <i class="fas fa-cog"></i> Admin Panel
+                </h5>
+                <nav class="nav flex-column">
+                    <a class="nav-link text-white active" href="{% url 'admin_dashboard' %}">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a>
+                    <a class="nav-link text-white" href="{% url 'admin_properties' %}">
+                        <i class="fas fa-building"></i> Properties
+                    </a>
+                    <a class="nav-link text-white" href="{% url 'admin_bookings' %}">
+                        <i class="fas fa-calendar-check"></i> Bookings
+                    </a>
+                    <a class="nav-link text-white" href="{% url 'admin_verifications' %}">
+                        <i class="fas fa-check-circle"></i> Verifications
+                    </a>
+                    <a class="nav-link text-white" href="{% url 'admin_settlements' %}">
+                        <i class="fas fa-money-bill-wave"></i> Settlements
+                    </a>
+                    <a class="nav-link text-white" href="{% url 'admin_users' %}">
+                        <i class="fas fa-users"></i> Users
+                    </a>
+                    <hr class="my-3">
+                    <a class="nav-link text-white" href="/admin/" target="_blank">
+                        <i class="fas fa-external-link-alt"></i> Django Admin
+                    </a>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-9 col-lg-10 px-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-tachometer-alt"></i> Admin Dashboard</h2>
+                <small class="text-muted">{{ request.user.username }}</small>
+            </div>
+
+            <!-- Metrics Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3 mb-3">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h5 class="card-title mb-0">{{ total_properties }}</h5>
+                                    <p class="card-text small">Total Properties</p>
+                                </div>
+                                <i class="fas fa-building fa-2x opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card bg-success text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h5 class="card-title mb-0">{{ verified_properties }}</h5>
+                                    <p class="card-text small">Verified Properties</p>
+                                </div>
+                                <i class="fas fa-check-circle fa-2x opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card bg-warning text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h5 class="card-title mb-0">{{ pending_verifications }}</h5>
+                                    <p class="card-text small">Pending Verifications</p>
+                                </div>
+                                <i class="fas fa-clock fa-2x opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card bg-info text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h5 class="card-title mb-0">{{ active_bookings }}</h5>
+                                    <p class="card-text small">Active Bookings</p>
+                                </div>
+                                <i class="fas fa-calendar-check fa-2x opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-3 mb-3">
+                    <div class="card bg-secondary text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h5 class="card-title mb-0">{{ total_bookings }}</h5>
+                                    <p class="card-text small">Total Bookings</p>
+                                </div>
+                                <i class="fas fa-list fa-2x opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card bg-danger text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h5 class="card-title mb-0">{{ pending_bookings }}</h5>
+                                    <p class="card-text small">Pending Bookings</p>
+                                </div>
+                                <i class="fas fa-exclamation-triangle fa-2x opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card bg-purple text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h5 class="card-title mb-0">{{ total_users }}</h5>
+                                    <p class="card-text small">Total Users</p>
+                                </div>
+                                <i class="fas fa-users fa-2x opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card bg-teal text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h5 class="card-title mb-0">{{ active_users }}</h5>
+                                    <p class="card-text small">Active Users (30d)</p>
+                                </div>
+                                <i class="fas fa-user-check fa-2x opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activities -->
+            <div class="row">
+                <!-- Recent Bookings -->
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="fas fa-calendar-plus"></i> Recent Bookings</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if recent_bookings %}
+                                {% for booking in recent_bookings %}
+                                <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+                                    <div>
+                                        <h6 class="mb-1">{{ booking.property.title }}</h6>
+                                        <small class="text-muted">
+                                            {{ booking.tenant.username }} • {{ booking.created_at|date:"M d, Y" }}
+                                        </small>
+                                    </div>
+                                    <span class="badge
+                                        {% if booking.status == 'approved' %}bg-success
+                                        {% elif booking.status == 'rejected' %}bg-danger
+                                        {% else %}bg-warning{% endif %}">
+                                        {{ booking.get_status_display }}
+                                    </span>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <p class="text-muted mb-0">No recent bookings</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pending Verifications -->
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="fas fa-check-circle"></i> Pending Verifications</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if recent_verifications %}
+                                {% for verification in recent_verifications %}
+                                <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+                                    <div>
+                                        <h6 class="mb-1">{{ verification.property.title }}</h6>
+                                        <small class="text-muted">
+                                            {{ verification.submitted_by.username }} • {{ verification.created_at|date:"M d, Y" }}
+                                        </small>
+                                    </div>
+                                    <a href="{% url 'verify_property' verification.id %}" class="btn btn-sm btn-outline-primary">Review</a>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <p class="text-muted mb-0">No pending verifications</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settlements Overview -->
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="fas fa-money-bill-wave"></i> Settlements Overview</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <h4 class="text-success">{{ completed_settlements }}</h4>
+                                    <small class="text-muted">Completed</small>
+                                </div>
+                                <div class="col-4">
+                                    <h4 class="text-warning">{{ disputed_settlements }}</h4>
+                                    <small class="text-muted">Disputed</small>
+                                </div>
+                                <div class="col-4">
+                                    <h4 class="text-info">{{ pending_payments }}</h4>
+                                    <small class="text-muted">Pending Payment</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Exit Requests -->
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="fas fa-door-open"></i> Recent Exit Requests</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if recent_exits %}
+                                {% for exit_req in recent_exits %}
+                                <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+                                    <div>
+                                        <h6 class="mb-1">{{ exit_req.booking.property.title }}</h6>
+                                        <small class="text-muted">
+                                            {{ exit_req.booking.tenant.username }} • {{ exit_req.created_at|date:"M d, Y" }}
+                                        </small>
+                                    </div>
+                                    <span class="badge bg-secondary">{{ exit_req.get_status_display }}</span>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <p class="text-muted mb-0">No recent exit requests</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-purple { background-color: #6f42c1 !important; }
+    .bg-teal { background-color: #20c997 !important; }
+    .min-vh-100 { min-height: 100vh; }
+    .nav-link:hover { background-color: rgba(255,255,255,0.1); }
+</style>
+{% endblock %}

@@ -22,6 +22,13 @@ urlpatterns = [
     # APPS
     path('listings/', include('listings.urls')),
     path('users/', include('users.urls')),
+
+    # Legacy notification links and old routes
+    path('bookings/<int:booking_id>/messages/', RedirectView.as_view(pattern_name='booking_messages', permanent=False)),
+    path('booking/<int:booking_id>/detail/', RedirectView.as_view(pattern_name='booking_detail', permanent=False)),
+    path('booking/<int:booking_id>/cancel/', RedirectView.as_view(pattern_name='cancel_booking', permanent=False)),
+    path('booking/<int:booking_id>/finalize/', RedirectView.as_view(pattern_name='finalize_booking', permanent=False)),
+    path('booking/<int:booking_id>/<str:action>/', RedirectView.as_view(pattern_name='manage_booking', permanent=False)),
 ]
 
 # SERVE MEDIA FILES IN DEVELOPMENT AND PRODUCTION

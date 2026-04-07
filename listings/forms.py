@@ -138,8 +138,37 @@ class InspectionReportForm(forms.ModelForm):
 
 
 class InspectionSubmissionForm(forms.Form):
-    checklist = forms.CharField(required=False, widget=forms.HiddenInput())
-    notes = forms.CharField(required=False, widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 4}))
+    walls = forms.CharField(
+        required=False,
+        label='Walls and paint condition',
+        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'e.g. minor scuffs, no cracks'})
+    )
+    floors = forms.CharField(
+        required=False,
+        label='Floors, tiles, and carpets',
+        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'e.g. clean, chipped tile, stained carpet'})
+    )
+    doors_windows = forms.CharField(
+        required=False,
+        label='Doors, windows and locks',
+        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'e.g. all work, some stuck hinges'})
+    )
+    plumbing = forms.CharField(
+        required=False,
+        label='Plumbing and fixtures',
+        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'e.g. faucets fine, no leaks'})
+    )
+    appliances = forms.CharField(
+        required=False,
+        label='Appliances and electrical',
+        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'e.g. refrigerator works, light fixture broken'})
+    )
+    cleanliness = forms.CharField(
+        required=False,
+        label='Overall cleanliness',
+        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'e.g. tidy, needs deep cleaning'})
+    )
+    notes = forms.CharField(required=False, label='Additional notes', widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 4}))
     damage_amount = forms.DecimalField(max_digits=10, decimal_places=2, min_value=0, required=False, widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
     images = forms.FileField(required=False, widget=forms.ClearableFileInput(attrs={'class': 'form-control'}))
 

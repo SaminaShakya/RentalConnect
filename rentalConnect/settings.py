@@ -35,6 +35,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    # Third-party apps
+    'channels',
+    'crispy_forms',
+    'crispy_bootstrap5',
+
     # Local apps
     'users',
     'listings',
@@ -196,6 +201,49 @@ LOGGING = {
             'handlers': ['console', 'file'],
             'level': 'INFO',
             'propagate': False,
+        },
+    },
+}
+
+
+# =========================
+# CRISPY FORMS
+# =========================
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+CRISPY_TEMPLATE_PACK = "bootstrap5"
+
+
+# =========================
+# PAYMENT GATEWAY SETTINGS
+# =========================
+STRIPE_PUBLIC_KEY = os.getenv('STRIPE_PUBLIC_KEY', 'pk_test_your_stripe_public_key')
+STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY', 'sk_test_your_stripe_secret_key')
+STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET', '')
+
+# eSewa Configuration (Nepal)
+ESEWA_MERCHANT_ID = os.getenv('ESEWA_MERCHANT_ID', 'your_esewa_merchant_id')
+ESEWA_SECRET_KEY = os.getenv('ESEWA_SECRET_KEY', 'your_esewa_secret_key')
+
+# Khalti Configuration (Nepal)
+KHALTI_PUBLIC_KEY = os.getenv('KHALTI_PUBLIC_KEY', 'your_khalti_public_key')
+KHALTI_SECRET_KEY = os.getenv('KHALTI_SECRET_KEY', 'your_khalti_secret_key')
+
+# Payment success/failure URLs
+PAYMENT_SUCCESS_URL = os.getenv('PAYMENT_SUCCESS_URL', 'http://localhost:8000/payment/success/')
+PAYMENT_CANCEL_URL = os.getenv('PAYMENT_CANCEL_URL', 'http://localhost:8000/payment/cancel/')
+
+
+# =========================
+# CHANNELS (WEBSOCKETS)
+# =========================
+ASGI_APPLICATION = 'rentalConnect.asgi.application'
+
+# Redis configuration for channels
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [os.getenv('REDIS_URL', 'redis://127.0.0.1:6379/1')],
         },
     },
 }

@@ -1,4 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
+from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
@@ -293,6 +294,8 @@ def owner_review_exit(request, exit_id, action):
     ex = get_object_or_404(EarlyExitRequest, pk=exit_id)
     if request.user != ex.booking.property.landlord:
         return redirect('home')
+    if request.method != 'POST':
+        return redirect('early_exit_detail', exit_id)
     if ex.status != 'requested':
         return redirect('early_exit_detail', exit_id)
 
@@ -365,9 +368,17 @@ def submit_inspection_report(request, exit_id):
     if request.method == 'POST':
         form = InspectionSubmissionForm(request.POST, request.FILES)
         if form.is_valid():
-            insp.checklist = form.cleaned_data.get('checklist', {})
+            insp.checklist = {
+                'walls': form.cleaned_data.get('walls', '').strip(),
+                'floors': form.cleaned_data.get('floors', '').strip(),
+                'doors_windows': form.cleaned_data.get('doors_windows', '').strip(),
+                'plumbing': form.cleaned_data.get('plumbing', '').strip(),
+                'appliances': form.cleaned_data.get('appliances', '').strip(),
+                'cleanliness': form.cleaned_data.get('cleanliness', '').strip(),
+            }
             insp.notes = form.cleaned_data.get('notes', '')
-            insp.damage_assessed_amount = form.cleaned_data.get('damage_amount', 0)
+            damage_value = form.cleaned_data.get('damage_amount')
+            insp.damage_assessed_amount = damage_value if damage_value is not None else 0
             insp.status = 'completed'
             insp.save()
             # handle uploaded image (single)
@@ -1142,7 +1153,7 @@ def booking_messages(request, booking_id):
                 actor=request.user,
                 title=notif_title,
                 message=message_content[:100],
-                target_url=f'/bookings/{booking_id}/messages/',
+                target_url=reverse('booking_messages', args=[booking_id]),
             )
             
             # Check if request came from property modal (next parameter)
@@ -1246,7 +1257,7 @@ def cancel_booking(request, booking_id):
             actor=request.user,
             title=f"Booking Cancelled for {booking.property.title}",
             message=f"Tenant {request.user.username} cancelled their booking ({booking.start_date} → {booking.end_date}). Reason: {cancellation_reason[:100]}",
-            target_url=f"/booking/{booking_id}/detail/",
+            target_url=f"/listings/booking/{booking_id}/detail/",
         )
         
         # Clear any pending appointments for this booking
@@ -1295,7 +1306,7 @@ def finalize_booking(request, booking_id):
             actor=request.user,
             title=f"Booking Finalized - {booking.property.title}",
             message=f"Your booking for {booking.property.title} has been finalized. Check-in: {booking.start_date}",
-            target_url=f"/booking/{booking_id}/detail/",
+            target_url=f"/listings/booking/{booking_id}/detail/",
         )
         
         return redirect('dashboard')
@@ -1353,7 +1364,7 @@ def request_appointment(request, property_id):
                 actor=request.user,
                 title=f"Appointment Request for {prop.title}",
                 message=f"{request.user.username} requested an appointment on {appt_date_obj} at {appointment_time}.",
-                target_url=f"/property/{property_id}/appointments/",
+                target_url=f"/listings/property/{property_id}/appointments/",
             )
             
             return render(request, 'listings/request_appointment.html', {
@@ -1415,7 +1426,7 @@ def manage_appointment(request, appointment_id, action):
         actor=request.user,
         title=notif_title,
         message=notif_msg,
-        target_url=f"/property/{appointment.property_id}/",
+        target_url=f"/listings/property/{appointment.property_id}/",
     )
     
     return redirect('dashboard')

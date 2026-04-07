@@ -1342,3 +1342,502 @@ Traceback (most recent call last):
                           ~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~
 TypeError: unsupported operand type(s) for *: 'decimal.Decimal' and 'float'
 ERROR 2026-02-26 09:02:22,447 log 16672 18120 "POST /booking/6/exit/request/ HTTP/1.1" 500 88960
+ERROR 2026-04-07 18:56:18,993 log 9480 8636 Internal Server Error: /listings/booking/6/finalize/
+Traceback (most recent call last):
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\core\handlers\base.py", line 198, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "D:\Docs\PROJECT\rentalConnect\listings\views.py", line 1304, in finalize_booking
+    return render(request, 'listings/finalize_booking.html', {
+        'booking': booking,
+    })
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\loader.py", line 15, in get_template
+    return engine.get_template(template_name)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\backends\django.py", line 79, in get_template
+    return Template(self.engine.get_template(template_name), self)
+                    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\engine.py", line 186, in get_template
+    template, origin = self.find_template(template_name)
+                       ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\engine.py", line 159, in find_template
+    template = loader.get_template(name, skip=skip)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\loaders\cached.py", line 57, in get_template
+    template = super().get_template(template_name, skip)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\loaders\base.py", line 28, in get_template
+    return Template(
+        contents,
+    ...<2 lines>...
+        self.engine,
+    )
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\base.py", line 157, in __init__
+    self.nodelist = self.compile_nodelist()
+                    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\base.py", line 199, in compile_nodelist
+    nodelist = parser.parse()
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\base.py", line 585, in parse
+    raise self.error(token, e)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\base.py", line 583, in parse
+    compiled_result = compile_func(self, token)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\loader_tags.py", line 307, in do_extends
+    nodelist = parser.parse()
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\base.py", line 585, in parse
+    raise self.error(token, e)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\base.py", line 583, in parse
+    compiled_result = compile_func(self, token)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\loader_tags.py", line 235, in do_block
+    nodelist = parser.parse(("endblock",))
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\base.py", line 590, in parse
+    self.unclosed_block_tag(parse_until)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\base.py", line 657, in unclosed_block_tag
+    raise self.error(token, msg)
+django.template.exceptions.TemplateSyntaxError: Template: D:\Docs\PROJECT\rentalConnect\templates\listings\finalize_booking.html, Unclosed tag on line 2: 'block'. Looking for one of: endblock.
+ERROR 2026-04-07 18:56:19,018 log 9480 8636 "GET /listings/booking/6/finalize/ HTTP/1.1" 500 186661
+ERROR 2026-04-07 18:59:53,077 log 9480 8636 Internal Server Error: /listings/booking/6/finalize/
+Traceback (most recent call last):
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\core\handlers\base.py", line 198, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "D:\Docs\PROJECT\rentalConnect\listings\views.py", line 1291, in finalize_booking
+    booking.save()
+    ~~~~~~~~~~~~^^
+  File "D:\Docs\PROJECT\rentalConnect\listings\models.py", line 128, in save
+    self.clean()
+    ~~~~~~~~~~^^
+  File "D:\Docs\PROJECT\rentalConnect\listings\models.py", line 99, in clean
+    raise ValidationError("Start date must be today or in the future.")
+django.core.exceptions.ValidationError: ['Start date must be today or in the future.']
+ERROR 2026-04-07 18:59:53,083 log 9480 8636 "POST /listings/booking/6/finalize/ HTTP/1.1" 500 90053
+ERROR 2026-04-07 22:02:09,255 log 19484 17112 Internal Server Error: /listings/exit/1/
+Traceback (most recent call last):
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\smartif.py", line 181, in translate_token
+    op = OPERATORS[token]
+         ~~~~~~~~~^^^^^^^
+KeyError: '[exit.booking.tenant,'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\core\handlers\base.py", line 198, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "D:\Docs\PROJECT\rentalConnect\listings\views.py", line 289, in early_exit_detail
+    return render(request, 'listings/early_exit_detail.html', {'exit': ex})
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\loader.py", line 15, in get_template
+    return engine.get_template(template_name)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\backends\django.py", line 79, in get_template
+    return Template(self.engine.get_template(template_name), self)
+                    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\engine.py", line 186, in get_template
+    template, origin = self.find_template(template_name)
+                       ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\engine.py", line 159, in find_template
+    template = loader.get_template(name, skip=skip)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\loaders\cached.py", line 57, in get_template
+    template = super().get_template(template_name, skip)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\loaders\base.py", line 28, in get_template
+    return Template(
+        contents,
+    ...<2 lines>...
+        self.engine,
+    )
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\base.py", line 157, in __init__
+    self.nodelist = self.compile_nodelist()
+                    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\base.py", line 199, in compile_nodelist
+    nodelist = parser.parse()
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\base.py", line 585, in parse
+    raise self.error(token, e)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\base.py", line 583, in parse
+    compiled_result = compile_func(self, token)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\loader_tags.py", line 307, in do_extends
+    nodelist = parser.parse()
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\base.py", line 585, in parse
+    raise self.error(token, e)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\base.py", line 583, in parse
+    compiled_result = compile_func(self, token)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\loader_tags.py", line 235, in do_block
+    nodelist = parser.parse(("endblock",))
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\base.py", line 585, in parse
+    raise self.error(token, e)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\base.py", line 583, in parse
+    compiled_result = compile_func(self, token)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\defaulttags.py", line 993, in do_if
+    condition = TemplateIfParser(parser, bits).parse()
+                ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\defaulttags.py", line 926, in __init__
+    super().__init__(*args, **kwargs)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\smartif.py", line 172, in __init__
+    mapped_tokens.append(self.translate_token(token))
+                         ~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\smartif.py", line 183, in translate_token
+    return self.create_var(token)
+           ~~~~~~~~~~~~~~~^^^^^^^
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\defaulttags.py", line 929, in create_var
+    return TemplateLiteral(self.template_parser.compile_filter(value), value)
+                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\base.py", line 676, in compile_filter
+    return FilterExpression(token, self)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\base.py", line 776, in __init__
+    raise TemplateSyntaxError(
+    ...<2 lines>...
+    )
+django.template.exceptions.TemplateSyntaxError: Template: D:\Docs\PROJECT\rentalConnect\templates\listings\early_exit_detail.html, Could not parse the remainder: '[exit.booking.tenant,' from '[exit.booking.tenant,'
+ERROR 2026-04-07 22:02:09,273 log 19484 17112 "GET /listings/exit/1/ HTTP/1.1" 500 235641
+ERROR 2026-04-07 22:02:59,760 log 19484 17112 Internal Server Error: /listings/exit/1/
+Traceback (most recent call last):
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\smartif.py", line 181, in translate_token
+    op = OPERATORS[token]
+         ~~~~~~~~~^^^^^^^
+KeyError: '(user'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\core\handlers\base.py", line 198, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "D:\Docs\PROJECT\rentalConnect\listings\views.py", line 289, in early_exit_detail
+    return render(request, 'listings/early_exit_detail.html', {'exit': ex})
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\loader.py", line 15, in get_template
+    return engine.get_template(template_name)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\backends\django.py", line 79, in get_template
+    return Template(self.engine.get_template(template_name), self)
+                    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\engine.py", line 186, in get_template
+    template, origin = self.find_template(template_name)
+                       ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\engine.py", line 159, in find_template
+    template = loader.get_template(name, skip=skip)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\loaders\cached.py", line 57, in get_template
+    template = super().get_template(template_name, skip)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\loaders\base.py", line 28, in get_template
+    return Template(
+        contents,
+    ...<2 lines>...
+        self.engine,
+    )
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\base.py", line 157, in __init__
+    self.nodelist = self.compile_nodelist()
+                    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\base.py", line 199, in compile_nodelist
+    nodelist = parser.parse()
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\base.py", line 585, in parse
+    raise self.error(token, e)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\base.py", line 583, in parse
+    compiled_result = compile_func(self, token)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\loader_tags.py", line 307, in do_extends
+    nodelist = parser.parse()
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\base.py", line 585, in parse
+    raise self.error(token, e)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\base.py", line 583, in parse
+    compiled_result = compile_func(self, token)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\loader_tags.py", line 235, in do_block
+    nodelist = parser.parse(("endblock",))
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\base.py", line 585, in parse
+    raise self.error(token, e)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\base.py", line 583, in parse
+    compiled_result = compile_func(self, token)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\defaulttags.py", line 993, in do_if
+    condition = TemplateIfParser(parser, bits).parse()
+                ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\defaulttags.py", line 926, in __init__
+    super().__init__(*args, **kwargs)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\smartif.py", line 172, in __init__
+    mapped_tokens.append(self.translate_token(token))
+                         ~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\smartif.py", line 183, in translate_token
+    return self.create_var(token)
+           ~~~~~~~~~~~~~~~^^^^^^^
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\defaulttags.py", line 929, in create_var
+    return TemplateLiteral(self.template_parser.compile_filter(value), value)
+                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\base.py", line 676, in compile_filter
+    return FilterExpression(token, self)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\base.py", line 776, in __init__
+    raise TemplateSyntaxError(
+    ...<2 lines>...
+    )
+django.template.exceptions.TemplateSyntaxError: Template: D:\Docs\PROJECT\rentalConnect\templates\listings\early_exit_detail.html, Could not parse the remainder: '(user' from '(user'
+ERROR 2026-04-07 22:02:59,770 log 19484 17112 "GET /listings/exit/1/ HTTP/1.1" 500 235533
+ERROR 2026-04-07 22:03:05,153 log 19484 17112 Internal Server Error: /listings/exit/1/
+Traceback (most recent call last):
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\smartif.py", line 181, in translate_token
+    op = OPERATORS[token]
+         ~~~~~~~~~^^^^^^^
+KeyError: '(user'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\core\handlers\base.py", line 198, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "D:\Docs\PROJECT\rentalConnect\listings\views.py", line 289, in early_exit_detail
+    return render(request, 'listings/early_exit_detail.html', {'exit': ex})
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\loader.py", line 15, in get_template
+    return engine.get_template(template_name)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\backends\django.py", line 79, in get_template
+    return Template(self.engine.get_template(template_name), self)
+                    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\engine.py", line 186, in get_template
+    template, origin = self.find_template(template_name)
+                       ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\engine.py", line 159, in find_template
+    template = loader.get_template(name, skip=skip)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\loaders\cached.py", line 57, in get_template
+    template = super().get_template(template_name, skip)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\loaders\base.py", line 28, in get_template
+    return Template(
+        contents,
+    ...<2 lines>...
+        self.engine,
+    )
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\base.py", line 157, in __init__
+    self.nodelist = self.compile_nodelist()
+                    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\base.py", line 199, in compile_nodelist
+    nodelist = parser.parse()
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\base.py", line 585, in parse
+    raise self.error(token, e)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\base.py", line 583, in parse
+    compiled_result = compile_func(self, token)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\loader_tags.py", line 307, in do_extends
+    nodelist = parser.parse()
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\base.py", line 585, in parse
+    raise self.error(token, e)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\base.py", line 583, in parse
+    compiled_result = compile_func(self, token)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\loader_tags.py", line 235, in do_block
+    nodelist = parser.parse(("endblock",))
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\base.py", line 585, in parse
+    raise self.error(token, e)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\base.py", line 583, in parse
+    compiled_result = compile_func(self, token)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\defaulttags.py", line 993, in do_if
+    condition = TemplateIfParser(parser, bits).parse()
+                ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\defaulttags.py", line 926, in __init__
+    super().__init__(*args, **kwargs)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\smartif.py", line 172, in __init__
+    mapped_tokens.append(self.translate_token(token))
+                         ~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\smartif.py", line 183, in translate_token
+    return self.create_var(token)
+           ~~~~~~~~~~~~~~~^^^^^^^
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\defaulttags.py", line 929, in create_var
+    return TemplateLiteral(self.template_parser.compile_filter(value), value)
+                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\base.py", line 676, in compile_filter
+    return FilterExpression(token, self)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\template\base.py", line 776, in __init__
+    raise TemplateSyntaxError(
+    ...<2 lines>...
+    )
+django.template.exceptions.TemplateSyntaxError: Template: D:\Docs\PROJECT\rentalConnect\templates\listings\early_exit_detail.html, Could not parse the remainder: '(user' from '(user'
+ERROR 2026-04-07 22:03:05,162 log 19484 17112 "GET /listings/exit/1/ HTTP/1.1" 500 235396
+ERROR 2026-04-07 22:10:32,217 log 10472 10212 Internal Server Error: /listings/exit/1/inspection/submit/
+Traceback (most recent call last):
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\db\backends\sqlite3\base.py", line 359, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+sqlite3.IntegrityError: NOT NULL constraint failed: listings_inspectionreport.damage_assessed_amount
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\core\handlers\base.py", line 198, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "D:\Docs\PROJECT\rentalConnect\listings\views.py", line 382, in submit_inspection_report
+    insp.save()
+    ~~~~~~~~~^^
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\db\models\base.py", line 874, in save
+    self.save_base(
+    ~~~~~~~~~~~~~~^
+        using=using,
+        ^^^^^^^^^^^^
+    ...<2 lines>...
+        update_fields=update_fields,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\db\models\base.py", line 966, in save_base
+    updated = self._save_table(
+        raw,
+    ...<4 lines>...
+        update_fields,
+    )
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\db\models\base.py", line 1110, in _save_table
+    results = self._do_update(
+        base_qs,
+    ...<5 lines>...
+        returning_fields,
+    )
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\db\models\base.py", line 1211, in _do_update
+    return filtered._update(values, returning_fields)
+           ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\db\models\query.py", line 1327, in _update
+    return query.get_compiler(self.db).execute_returning_sql(returning_fields)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\db\models\sql\compiler.py", line 2140, in execute_returning_sql
+    row_count = self.execute_sql(ROW_COUNT)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\db\models\sql\compiler.py", line 2111, in execute_sql
+    row_count = super().execute_sql(result_type)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\db\models\sql\compiler.py", line 1624, in execute_sql
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\db\backends\utils.py", line 122, in execute
+    return super().execute(sql, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\db\utils.py", line 94, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\db\backends\sqlite3\base.py", line 359, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+django.db.utils.IntegrityError: NOT NULL constraint failed: listings_inspectionreport.damage_assessed_amount
+ERROR 2026-04-07 22:10:32,231 log 10472 10212 "POST /listings/exit/1/inspection/submit/ HTTP/1.1" 500 175758
+ERROR 2026-04-07 22:12:35,985 log 11436 12144 Internal Server Error: /listings/exit/1/inspection/submit/
+Traceback (most recent call last):
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\db\backends\sqlite3\base.py", line 359, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+sqlite3.IntegrityError: CHECK constraint failed: notice_given_days
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\core\handlers\base.py", line 198, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "D:\Docs\PROJECT\rentalConnect\listings\views.py", line 391, in submit_inspection_report
+    ex.save()
+    ~~~~~~~^^
+  File "D:\Docs\PROJECT\rentalConnect\listings\models.py", line 243, in save
+    super().save(*args, **kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\db\models\base.py", line 874, in save
+    self.save_base(
+    ~~~~~~~~~~~~~~^
+        using=using,
+        ^^^^^^^^^^^^
+    ...<2 lines>...
+        update_fields=update_fields,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\db\models\base.py", line 966, in save_base
+    updated = self._save_table(
+        raw,
+    ...<4 lines>...
+        update_fields,
+    )
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\db\models\base.py", line 1110, in _save_table
+    results = self._do_update(
+        base_qs,
+    ...<5 lines>...
+        returning_fields,
+    )
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\db\models\base.py", line 1211, in _do_update
+    return filtered._update(values, returning_fields)
+           ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\db\models\query.py", line 1327, in _update
+    return query.get_compiler(self.db).execute_returning_sql(returning_fields)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\db\models\sql\compiler.py", line 2140, in execute_returning_sql
+    row_count = self.execute_sql(ROW_COUNT)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\db\models\sql\compiler.py", line 2111, in execute_sql
+    row_count = super().execute_sql(result_type)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\db\models\sql\compiler.py", line 1624, in execute_sql
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\db\backends\utils.py", line 122, in execute
+    return super().execute(sql, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\db\utils.py", line 94, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "D:\Docs\PROJECT\rentalConnect\.venv\Lib\site-packages\django\db\backends\sqlite3\base.py", line 359, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+django.db.utils.IntegrityError: CHECK constraint failed: notice_given_days
+ERROR 2026-04-07 22:12:35,999 log 11436 12144 "POST /listings/exit/1/inspection/submit/ HTTP/1.1" 500 182355
