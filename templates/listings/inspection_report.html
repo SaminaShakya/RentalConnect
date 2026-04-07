@@ -14,8 +14,8 @@
             {{ form.notes }}
         </div>
         <div class="mb-3">
-            <label for="damage_amount">Damage amount</label>
-            <input type="number" step="0.01" name="damage_amount" id="damage_amount" class="form-control" value="{{ inspection.damage_assessed_amount }}">
+            {{ form.damage_amount.label_tag }}
+            {{ form.damage_amount }}
         </div>
         <div class="mb-3">
             {{ form.images.label_tag }}

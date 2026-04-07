@@ -137,9 +137,24 @@ class InspectionReportForm(forms.ModelForm):
         }
 
 
+class InspectionSubmissionForm(forms.Form):
+    checklist = forms.CharField(required=False, widget=forms.HiddenInput())
+    notes = forms.CharField(required=False, widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 4}))
+    damage_amount = forms.DecimalField(max_digits=10, decimal_places=2, min_value=0, required=False, widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
+    images = forms.FileField(required=False, widget=forms.ClearableFileInput(attrs={'class': 'form-control'}))
+
+
 class SettlementActionForm(forms.Form):
     action = forms.ChoiceField(choices=(('accept','Accept'),('dispute','Dispute')))
     comments = forms.CharField(required=False, widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3}))
+
+    def clean(self):
+        cleaned = super().clean()
+        action = cleaned.get('action')
+        comments = (cleaned.get('comments') or '').strip()
+        if action == 'dispute' and not comments:
+            self.add_error('comments', 'Please provide comments when disputing the settlement.')
+        return cleaned
 
 class PropertyAppointmentForm(forms.ModelForm):
     """Form for requesting property viewing appointments"""

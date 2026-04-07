@@ -288,7 +288,7 @@ class Settlement(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"Deleted: {self.property.title}"
+        return f"Settlement for exit #{self.exit_request.id}"
 
 
 class PropertyVerificationRequest(models.Model):

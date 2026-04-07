@@ -28,6 +28,7 @@ from .forms import (
     PropertyVerificationRequestForm,
     EarlyExitRequestForm,
     InspectionReportForm,
+    InspectionSubmissionForm,
     SettlementActionForm,
 )
 from users.models import Notification
@@ -252,7 +253,7 @@ def request_property_verification(request, property_id):
 
 @login_required
 def request_early_exit(request, booking_id):
-    booking = get_object_or_404(Booking, pk=booking_id, tenant=request.user, status='approved')
+    booking = get_object_or_404(Booking, pk=booking_id, tenant=request.user, status='rented_out')
     # prevent duplicate
     if hasattr(booking, 'early_exit'):
         return redirect('early_exit_detail', booking.early_exit.id)
@@ -361,32 +362,35 @@ def submit_inspection_report(request, exit_id):
     if not insp or insp.status != 'pending':
         return redirect('early_exit_detail', exit_id)
 
-    # In a real system checklist fields and images would be handled via JS
     if request.method == 'POST':
-        insp.checklist = request.POST.get('checklist', {})
-        insp.notes = request.POST.get('notes', '')
-        insp.damage_assessed_amount = Decimal(request.POST.get('damage_amount','0') or '0')
-        insp.status = 'completed'
-        insp.save()
-        # handle uploaded image (single)
-        img = request.FILES.get('images')
-        if img:
-            from .models import InspectionImage
-            InspectionImage.objects.create(report=insp, image=img)
+        form = InspectionSubmissionForm(request.POST, request.FILES)
+        if form.is_valid():
+            insp.checklist = form.cleaned_data.get('checklist', {})
+            insp.notes = form.cleaned_data.get('notes', '')
+            insp.damage_assessed_amount = form.cleaned_data.get('damage_amount', 0)
+            insp.status = 'completed'
+            insp.save()
+            # handle uploaded image (single)
+            img = form.cleaned_data.get('images')
+            if img:
+                from .models import InspectionImage
+                InspectionImage.objects.create(report=insp, image=img)
 
-        ex.status = 'inspection_completed'
-        ex.save()
-        # create settlement draft
-        Settlement.objects.create(exit_request=ex, lease=ex.booking)
-        Notification.objects.create(
-            recipient=ex.booking.tenant,
-            actor=request.user,
-            title='Inspection completed',
-            message=f"Inspection for exit request #{ex.id} completed. Settlement draft is ready.",
-            target_url=f"/listings/exit/{ex.id}/",
-        )
-        return redirect('early_exit_detail', exit_id)
-    return render(request, 'listings/inspection_report.html', {'inspection': insp, 'exit': ex})
+            ex.status = 'inspection_completed'
+            ex.save()
+            # create settlement draft
+            Settlement.objects.create(exit_request=ex, lease=ex.booking)
+            Notification.objects.create(
+                recipient=ex.booking.tenant,
+                actor=request.user,
+                title='Inspection completed',
+                message=f"Inspection for exit request #{ex.id} completed. Settlement draft is ready.",
+                target_url=f"/listings/exit/{ex.id}/",
+            )
+            return redirect('early_exit_detail', exit_id)
+    else:
+        form = InspectionSubmissionForm()
+    return render(request, 'listings/inspection_report.html', {'inspection': insp, 'exit': ex, 'form': form})
 
 
 @login_required
@@ -395,6 +399,9 @@ def view_settlement(request, exit_id):
     settlement = getattr(ex, 'settlement', None)
     if not settlement:
         return redirect('early_exit_detail', exit_id)
+
+    if request.user not in [ex.booking.tenant, ex.booking.property.landlord] and not request.user.is_superuser:
+        return redirect('home')
 
     if request.method == 'POST':
         form = SettlementActionForm(request.POST)
@@ -406,10 +413,13 @@ def view_settlement(request, exit_id):
                     settlement.status = 'tenant_accepted'
                 elif request.user == ex.booking.property.landlord:
                     settlement.status = 'owner_accepted'
+                else:
+                    form.add_error(None, 'Only the tenant or landlord may accept the settlement.')
+                    return render(request, 'listings/settlement.html', {'settlement': settlement, 'exit': ex, 'form': form})
                 settlement.save()
             else:
                 settlement.status = 'disputed'
-                settlement.notes += f"\n{request.user.username}: {comments}"
+                settlement.notes = (settlement.notes or '') + f"\n{request.user.username}: {comments}"
                 settlement.save()
             return redirect('early_exit_detail', exit_id)
     else:
