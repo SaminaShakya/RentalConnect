@@ -577,7 +577,7 @@ def property_detail(request, property_id):
         active_booking = Booking.objects.filter(
             tenant=request.user,
             property=prop,
-            status__in=['approved', 'pending']
+            status__in=['approved', 'pending', 'rented_out']
         ).first()
         
         if active_booking:
@@ -606,6 +606,7 @@ def property_detail(request, property_id):
         'today': timezone.now().date(),
         'can_cancel_active_booking': can_cancel_active_booking,
         'can_finalize_active_booking': can_finalize_active_booking,
+        'has_early_exit': hasattr(active_booking, 'early_exit') if active_booking else False,
     })
 
 
@@ -1207,6 +1208,7 @@ def booking_detail(request, booking_id):
         'today': today,
         'can_cancel': can_cancel,
         'can_finalize': can_finalize,
+        'has_early_exit': hasattr(booking, 'early_exit'),
     })
 
 

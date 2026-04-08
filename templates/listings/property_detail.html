@@ -234,7 +234,7 @@
                                 <i class="fas fa-check-circle"></i> Finalize Booking
                             </a>
                         {% endif %}
-                        {% if active_booking.status == 'approved' and user == active_booking.tenant and not active_booking.early_exit_id %}
+                        {% if active_booking.status == 'rented_out' and user == active_booking.tenant and not has_early_exit %}
                             <a href="{% url 'request_early_exit' active_booking.id %}" class="btn btn-sm btn-warning">
                                 <i class="fas fa-sign-out-alt"></i> Request Early Exit
                             </a>
