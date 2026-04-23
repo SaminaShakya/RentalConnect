@@ -36,253 +36,179 @@
                 </div>
 
             </div>
+
+            <div class="col-md-5 mt-4 mt-md-0">
+                <div class="card p-4 shadow-hover">
+                    <h5 class="mb-1">Search rentals</h5>
+                    <p class="text-muted small mb-3">Use city search or order by distance using your location.</p>
+
+                    <form id="homeSearchForm" method="get" action="{% url 'property_list' %}" class="d-grid gap-3">
+                        <div>
+                            <label class="form-label">Search</label>
+                            <input class="form-control" type="text" name="q" placeholder="Title, area, address">
+                        </div>
+
+                        <div class="row g-2">
+                            <div class="col-7">
+                                <label class="form-label">City</label>
+                                <input class="form-control" type="text" name="city" placeholder="e.g., Kathmandu">
+                            </div>
+                            <div class="col-5">
+                                <label class="form-label">Max rent</label>
+                                <input class="form-control" type="number" name="max_rent" placeholder="20000">
+                            </div>
+                        </div>
+
+                        <input id="homeLat" type="hidden" name="lat" value="">
+                        <input id="homeLng" type="hidden" name="lng" value="">
+
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-primary flex-grow-1" type="submit">
+                                <i class="fas fa-search"></i> Search
+                            </button>
+                            <button id="homeUseLocationBtn" class="btn btn-outline-secondary" type="button" aria-label="Use my location">
+                                <i class="fas fa-location-crosshairs"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
+<script>
+  (function () {
+    const btn = document.getElementById('homeUseLocationBtn');
+    const lat = document.getElementById('homeLat');
+    const lng = document.getElementById('homeLng');
+    const form = document.getElementById('homeSearchForm');
+    if (!btn || !lat || !lng || !form) return;
+
+    btn.addEventListener('click', function () {
+      if (!navigator.geolocation) {
+        alert('Location is not supported in this browser.');
+        return;
+      }
+      btn.disabled = true;
+
+      navigator.geolocation.getCurrentPosition(
+        function (pos) {
+          lat.value = pos.coords.latitude.toFixed(6);
+          lng.value = pos.coords.longitude.toFixed(6);
+          form.submit();
+        },
+        function () {
+          btn.disabled = false;
+          alert('Could not get your location. You can still search by city.');
+        },
+        { enableHighAccuracy: true, timeout: 8000 }
+      );
+    });
+  })();
+</script>
+
 <!-- DASHBOARD (EMBEDDED FOR LOGGED-IN USERS) -->
 {% if user.is_authenticated %}
-<div id="dashboard" class="container mt-5 mb-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2 class="section-title mb-1">Dashboard</h2>
-            <p class="text-muted mb-0">
-                Welcome, <strong>{{ request.user.username }}</strong>
-            </p>
-        </div>
-
-        <div class="text-end">
-            <span class="badge bg-primary mb-2">
-                {% if is_tenant %}Tenant{% elif is_landlord %}Landlord{% else %}Admin{% endif %}
-            </span>
-            <div class="mt-2">
-                <a href="{% url 'update_profile' %}" class="btn btn-sm btn-outline-secondary">
-                    Update Profile
-                </a>
+<div class="container my-4">
+    <div class="card p-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
+            <div>
+                <h3 class="mb-1">Welcome back</h3>
+                <p class="text-muted mb-0">Go to your dashboard to manage bookings, messages, and listings.</p>
+            </div>
+            <div class="d-flex gap-2">
+                <a class="btn btn-primary" href="{% url 'dashboard' %}">Open dashboard</a>
+                <a class="btn btn-outline-secondary" href="{% url 'property_list' %}">Explore</a>
             </div>
         </div>
     </div>
-
-    {% if is_tenant %}
-    <div class="row mb-4">
-        <div class="col-md-3 mb-3"><div class="card p-3"><small class="text-muted">Total Requests</small><div class="h4 mb-0">{{ stats.total_bookings|default:0 }}</div></div></div>
-        <div class="col-md-3 mb-3"><div class="card p-3"><small class="text-muted">Pending</small><div class="h4 mb-0">{{ stats.pending_bookings|default:0 }}</div></div></div>
-        <div class="col-md-3 mb-3"><div class="card p-3"><small class="text-muted">Approved</small><div class="h4 mb-0">{{ stats.approved_bookings|default:0 }}</div></div></div>
-        <div class="col-md-3 mb-3"><div class="card p-3"><small class="text-muted">Rejected</small><div class="h4 mb-0">{{ stats.rejected_bookings|default:0 }}</div></div></div>
-    </div>
-
-    <div class="card p-4">
-        <h4 class="mb-3">My Booking Requests</h4>
-        {% if bookings %}
-            <div class="list-group">
-                {% for booking in bookings %}
-                <a href="{% url 'booking_detail' booking.id %}" class="list-group-item list-group-item-action">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <strong>{{ booking.property.title }}</strong><br>
-                            <small class="text-muted">{{ booking.start_date }} → {{ booking.end_date }}</small>
-                        </div>
-                        <div>
-                            {% if booking.status == 'approved' %}
-                                <span class="badge bg-success">Approved</span>
-                            {% elif booking.status == 'rejected' %}
-                                <span class="badge bg-danger">Rejected</span>
-                            {% elif booking.status == 'cancelled' %}
-                                <span class="badge bg-dark">Cancelled</span>
-                            {% elif booking.status == 'rented_out' %}
-                                <span class="badge bg-secondary">Rented Out</span>
-                            {% else %}
-                                <span class="badge bg-warning text-dark">Pending</span>
-                            {% endif %}
-                        </div>
-                    </div>
-                </a>
-                {% endfor %}
-            </div>
-        {% else %}
-            <p class="text-muted">No booking requests yet.</p>
-        {% endif %}
-    </div>
-    {% endif %}
-
-    {% if is_landlord %}
-    <div class="row mb-4">
-        <div class="col-md-3 mb-3"><div class="card p-3"><small class="text-muted">Total Properties</small><div class="h4 mb-0">{{ stats.total_properties|default:0 }}</div></div></div>
-        <div class="col-md-3 mb-3"><div class="card p-3"><small class="text-muted">Verified</small><div class="h4 mb-0">{{ stats.verified_properties|default:0 }}</div></div></div>
-        <div class="col-md-3 mb-3"><div class="card p-3"><small class="text-muted">Unverified</small><div class="h4 mb-0">{{ stats.unverified_properties|default:0 }}</div></div></div>
-        <div class="col-md-3 mb-3"><div class="card p-3"><small class="text-muted">Pending Requests</small><div class="h4 mb-0">{{ stats.pending_booking_requests|default:0 }}</div></div></div>
-    </div>
-
-    <div class="card p-4 mb-4">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h4>My Properties</h4>
-            <a href="{% url 'add_property' %}" class="btn btn-primary btn-sm">+ Add Property</a>
-        </div>
-        {% if owner_properties %}
-            <div class="list-group">
-                {% for property in owner_properties %}
-                <div class="list-group-item d-flex justify-content-between align-items-center">
-                    <div>
-                        <strong>{{ property.title }}</strong><br>
-                        {{ property.city }} – Rs. {{ property.rent }}
-                        {% if property.is_verified %}
-                            <span class="badge bg-success ms-2">Verified</span>
-                        {% else %}
-                            <span class="badge bg-warning text-dark ms-2">Pending verification</span>
-                        {% endif %}
-                    </div>
-                    <div>
-                        {% if not property.is_verified %}
-                            {% if property.has_pending_verification %}
-                                <span class="badge bg-info text-dark me-2">Verification requested</span>
-                            {% else %}
-                                <a href="{% url 'request_property_verification' property.id %}"
-                                   class="btn btn-sm btn-outline-primary me-2">
-                                    Request verification
-                                </a>
-                            {% endif %}
-                        {% endif %}
-                        <a href="{% url 'edit_property' property.id %}" class="btn btn-sm btn-outline-secondary">Edit</a>
-                        <a href="{% url 'delete_property' property.id %}" class="btn btn-sm btn-outline-danger">Delete</a>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        {% else %}
-            <p class="text-muted">You haven’t listed any properties yet.</p>
-        {% endif %}
-    </div>
-
-    <div class="card p-4">
-        <h4 class="mb-3">Booking Requests</h4>
-        {% if landlord_bookings %}
-            <div class="list-group">
-                {% for booking in landlord_bookings %}
-                <div class="list-group-item">
-                    <strong>{{ booking.property.title }}</strong><br>
-                    Tenant: {{ booking.tenant.username }}<br>
-                    {{ booking.start_date }} → {{ booking.end_date }}
-                    <div class="mt-2">
-                        {% if booking.status == 'pending' %}
-                            <a href="{% url 'manage_booking' booking.id 'approve' %}" class="btn btn-sm btn-success">Approve</a>
-                            <a href="{% url 'manage_booking' booking.id 'reject' %}" class="btn btn-sm btn-danger">Reject</a>
-                        {% elif booking.status == 'approved' %}
-                            <span class="badge bg-success">Approved</span>
-                            <a href="{% url 'finalize_booking' booking.id %}" class="btn btn-sm btn-success ms-2">Finalize</a>
-                        {% else %}
-                            <span class="badge bg-danger">Rejected</span>
-                        {% endif %}
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        {% else %}
-            <p class="text-muted">No booking requests yet.</p>
-        {% endif %}
-    </div>
-    {% endif %}
-
-    {% if is_admin and not is_tenant and not is_landlord %}
-    <div class="card p-4">
-        <h4>Admin Panel</h4>
-        <p class="text-muted">Manage users and verify property listings.</p>
-        <a href="/admin/" target="_blank" class="btn btn-outline-primary">Open Admin Panel</a>
-    </div>
-    {% endif %}
-
 </div>
 {% endif %}
 
 
-<!-- FEATURED PROPERTIES -->
+<!-- FEATURED PROPERTIES SECTION -->
 <div class="container mt-5">
-
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="section-title">Featured Properties</h2>
-
-        <a href="{% url 'property_list' %}"
-           class="btn btn-outline-secondary">
-            View all →
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h2 class="section-title mb-2">
+                {% if user.is_authenticated %}
+                    Recommended for you
+                {% else %}
+                    Featured Properties
+                {% endif %}
+            </h2>
+            <p class="text-muted">Browse verified properties in your area</p>
+        </div>
+        <a href="{% url 'property_list' %}" class="btn btn-outline-secondary">
+            View all properties
         </a>
     </div>
 
     {% if page_obj %}
-    <!-- CAROUSEL CONTAINER -->
-    <div id="propertiesCarousel" class="carousel slide carousel-dark" data-bs-ride="false">
-        
-        <!-- CAROUSEL SLIDES -->
-        <div class="carousel-inner">
-            {% for property in page_obj %}
-                {% if forloop.counter0|divisibleby:3 %}
-                <div class="carousel-item {% if forloop.counter0 == 0 %}active{% endif %}">
-                    <div class="properties-carousel-row">
-                {% endif %}
-
-                        <div class="property-carousel-card">
-                            <div class="property-carousel-image">
-                                {% if property.images.all %}
-                                    <img src="{{ property.images.first.image.url }}" alt="{{ property.title }}">
-                                    {% if property.images.all|length > 1 %}
-                                        <div style="position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.6); color: white; padding: 3px 6px; border-radius: 3px; font-size: 0.7rem;">
-                                            📷 {{ property.images.all|length }}
-                                        </div>
-                                    {% endif %}
-                                {% elif property.image %}
-                                    <img src="{{ property.image.url }}" alt="{{ property.title }}">
-                                {% else %}
-                                    <div class="property-placeholder">
-                                        <i class="fas fa-home"></i>
-                                        <p>No image</p>
-                                    </div>
-                                {% endif %}
-                            </div>
-                            
-                            <div class="property-carousel-body">
-                                <h6>{{ property.title }}</h6>
-                                <p class="text-muted small mb-2">
-                                    <i class="fas fa-map-marker-alt"></i> {{ property.city }}
-                                </p>
-                                <p class="price-small mb-2">
-                                    Rs. {{ property.rent|floatformat:0 }}/mo
-                                </p>
-                                <div class="property-features-small mb-2">
-                                    <span class="feature-badge-small"><i class="fas fa-bed"></i> {{ property.bedrooms }}</span>
-                                    <span class="feature-badge-small"><i class="fas fa-bath"></i> {{ property.bathrooms }}</span>
-                                </div>
-                                <a href="{% url 'property_detail' property.id %}"
-                                   class="btn btn-primary btn-sm w-100">
-                                    <i class="fas fa-eye"></i> View
-                                </a>
-                            </div>
-                        </div>
-
-                {% if forloop.counter|divisibleby:3 or forloop.last %}
+    <!-- PROPERTY GRID -->
+    <div class="property-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; margin-bottom: 40px;">
+        {% for property in page_obj %}
+        <div class="property-card-modern">
+            <!-- Image -->
+            <div class="property-card-modern-image">
+                {% if property.images.all %}
+                    <img src="{{ property.images.first.image.url }}" alt="{{ property.title }}">
+                {% elif property.image %}
+                    <img src="{{ property.image.url }}" alt="{{ property.title }}">
+                {% else %}
+                    <div class="d-flex align-items-center justify-content-center" style="width:100%; height:100%; background: var(--gray-100); color: var(--gray-500);">
+                        <i class="fas fa-home" style="font-size: 3rem;"></i>
                     </div>
+                {% endif %}
+                
+                <!-- Distance Badge -->
+                <div class="distance-badge">
+                    <i class="fas fa-location-dot"></i>
+                    <span>
+                        {% if property.latitude and property.longitude %}
+                            {{ property.distance|default:"View" }}
+                        {% else %}
+                            View location
+                        {% endif %}
+                    </span>
                 </div>
-                {% endif %}
-            {% endfor %}
-        </div>
 
-        <!-- CAROUSEL CONTROLS -->
-        {% if page_obj|length > 3 %}
-        <button class="carousel-control-prev" type="button" data-bs-target="#propertiesCarousel" data-bs-slide="prev">
-            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-            <span class="visually-hidden">Previous</span>
-        </button>
-        <button class="carousel-control-next" type="button" data-bs-target="#propertiesCarousel" data-bs-slide="next">
-            <span class="carousel-control-next-icon" aria-hidden="true"></span>
-            <span class="visually-hidden">Next</span>
-        </button>
-
-        <!-- CAROUSEL INDICATORS -->
-        <div class="carousel-indicators mt-3">
-            {% for property in page_obj %}
-                {% if forloop.counter0|divisibleby:3 %}
-                <button type="button" data-bs-target="#propertiesCarousel" data-bs-slide-to="{% widthratio forloop.counter0 3 1 %}" {% if forloop.counter0 == 0 %}class="active" aria-current="true"{% endif %} aria-label="Slide"></button>
+                <!-- Image count -->
+                {% if property.images.all|length > 1 %}
+                    <div style="position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.6); color: white; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600;">
+                        📷 {{ property.images.all|length }}
+                    </div>
                 {% endif %}
-            {% endfor %}
+            </div>
+
+            <!-- Body -->
+            <div class="property-card-modern-body">
+                <h5>{{ property.title }}</h5>
+                
+                <p class="location">
+                    <i class="fas fa-map-marker-alt"></i>
+                    {{ property.city }}
+                </p>
+
+                <p class="price">Rs. {{ property.rent|floatformat:0 }}/mo</p>
+
+                <div class="features">
+                    <span class="feature-tag">
+                        <i class="fas fa-bed"></i> {{ property.bedrooms }} bed{{ property.bedrooms|pluralize }}
+                    </span>
+                    <span class="feature-tag">
+                        <i class="fas fa-bath"></i> {{ property.bathrooms }} bath{{ property.bathrooms|pluralize }}
+                    </span>
+                </div>
+
+                <a href="{% url 'property_detail' property.id %}" class="btn-view">
+                    <i class="fas fa-arrow-right" style="margin-right: 4px;"></i>
+                    View Property Details
+                </a>
+            </div>
         </div>
-        {% endif %}
+        {% endfor %}
     </div>
 
     {% else %}
@@ -291,189 +217,118 @@
             <p class="text-muted mt-3">No featured properties available at the moment.</p>
         </div>
     {% endif %}
-
 </div>
 
-
-<!-- ABOUT SECTION -->
-<div id="about" class="container mt-5 mb-5">
-
-    <div class="card p-5">
-
-        <div class="row align-items-center">
-
-            <!-- LEFT: ABOUT TEXT -->
-            <div class="col-md-7 mb-4 mb-md-0">
-                <h2 class="section-title mb-3">
-                    Why Choose Rental Connect?
-                </h2>
-
-                <p class="text-muted mb-3">
-                    Finding the right rental shouldn't be complicated. Rental Connect simplifies
-                    the entire rental process by bringing verified properties, transparent landlords,
-                    and serious tenants together on a single, secure platform.
-                </p>
-
-                <p class="text-muted mb-3">
-                    Whether you're searching for your next home or looking to rent out your property,
-                    our smart booking system prevents conflicts, ensures transparency, and builds trust
-                    between all parties involved.
-                </p>
-
-                <p class="text-muted">
-                    Join thousands of users who have already experienced hassle-free renting with
-                    verified properties, instant booking updates, and a community you can trust.
-                </p>
-            </div>
-
-            <!-- RIGHT: HIGHLIGHTS -->
-            <div class="col-md-5">
-                <div class="list-group">
-
-                    <div class="list-group-item">
-                        <i class="fas fa-check-shield"></i>
-                        <div>
-                            <strong>Verified Properties</strong><br>
-                            <small class="text-muted">All listings are verified for authenticity and quality.</small>
-                        </div>
-                    </div>
-
-                    <div class="list-group-item">
-                        <i class="fas fa-clock"></i>
-                        <div>
-                            <strong>Real-Time Updates</strong><br>
-                            <small class="text-muted">Get instant notifications on bookings and approvals.</small>
-                        </div>
-                    </div>
-
-                    <div class="list-group-item">
-                        <i class="fas fa-users"></i>
-                        <div>
-                            <strong>Trusted Community</strong><br>
-                            <small class="text-muted">Connect with verified landlords and serious tenants.</small>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-
-        </div>
-
+<!-- FEATURES BENTO GRID -->
+<div class="container mt-5">
+    <div class="mb-5">
+        <h2 class="section-title mb-2">Why Choose Rental Connect</h2>
+        <p class="text-muted">Experience the future of property rental</p>
     </div>
 
-</div>
-
-
-<!-- ROLE INFO (NO ADMIN SHOWN) -->
-<div class="container mb-5">
-    <h2 class="section-title text-center mb-4">Designed for Everyone</h2>
-    <div class="row text-center">
-
-        <div class="col-md-6 mb-3">
-            <div class="card p-4 h-100 role-card">
-                <div class="mb-3">
-                    <i class="fas fa-search" style="font-size: 2.5rem; color: var(--primary-500);"></i>
-                </div>
-                <h4>Looking for a Home?</h4>
-                <p class="text-muted">
-                    Browse verified properties, save your favorites, submit booking requests,
-                    and communicate directly with landlords. All in one intuitive dashboard.
-                </p>
-                <ul class="feature-list text-start mt-3">
-                    <li><i class="fas fa-check" style="color: var(--success-500);"></i> Advanced search filters</li>
-                    <li><i class="fas fa-check" style="color: var(--success-500);"></i> Instant booking requests</li>
-                    <li><i class="fas fa-check" style="color: var(--success-500);"></i> Real-time notifications</li>
-                </ul>
+    <div class="bento-grid">
+        <!-- Card 1: Verified Properties -->
+        <div class="bento-card">
+            <div class="icon">
+                <i class="fas fa-shield-alt"></i>
             </div>
+            <h4>Verified Properties</h4>
+            <p>All properties are thoroughly verified and inspected for your peace of mind.</p>
         </div>
 
-        <div class="col-md-6 mb-3">
-            <div class="card p-4 h-100 role-card">
-                <div class="mb-3">
-                    <i class="fas fa-building" style="font-size: 2.5rem; color: var(--accent-500);"></i>
-                </div>
-                <h4>Have a Property?</h4>
-                <p class="text-muted">
-                    List your property, manage booking requests, accept reliable tenants,
-                    and track everything through our landlord-friendly management system.
-                </p>
-                <ul class="feature-list text-start mt-3">
-                    <li><i class="fas fa-check" style="color: var(--success-500);"></i> Easy property listing</li>
-                    <li><i class="fas fa-check" style="color: var(--success-500);"></i> Request management</li>
-                    <li><i class="fas fa-check" style="color: var(--success-500);"></i> Booking analytics</li>
-                </ul>
+        <!-- Card 2: Real-Time Updates -->
+        <div class="bento-card">
+            <div class="icon">
+                <i class="fas fa-sync-alt"></i>
             </div>
+            <h4>Real-Time Updates</h4>
+            <p>Get instant notifications about property availability and booking status.</p>
         </div>
 
+        <!-- Card 3: Trusted Community -->
+        <div class="bento-card">
+            <div class="icon">
+                <i class="fas fa-handshake"></i>
+            </div>
+            <h4>Trusted Community</h4>
+            <p>Connect with verified tenants and landlords in a secure environment.</p>
+        </div>
+
+        <!-- Card 4: Location Intelligence -->
+        <div class="bento-card">
+            <div class="icon">
+                <i class="fas fa-map-location-dot"></i>
+            </div>
+            <h4>Location Intelligence</h4>
+            <p>Find properties based on distance to your workplace or preferred areas.</p>
+        </div>
+
+        <!-- Card 5: Transparent Pricing -->
+        <div class="bento-card">
+            <div class="icon">
+                <i class="fas fa-tag"></i>
+            </div>
+            <h4>Transparent Pricing</h4>
+            <p>No hidden fees. All costs are clear upfront before you commit.</p>
+        </div>
+
+        <!-- Card 6: Easy Communication -->
+        <div class="bento-card">
+            <div class="icon">
+                <i class="fas fa-comments"></i>
+            </div>
+            <h4>Easy Communication</h4>
+            <p>Message property owners directly to discuss terms and details.</p>
+        </div>
     </div>
 </div>
 
-<!-- CONTACT SECTION -->
-<div id="contact" class="container mt-5 mb-5">
-
-    <div class="card p-5">
-
-        <div class="row align-items-center">
-
-            <!-- LEFT: TEXT -->
-            <div class="col-md-6 mb-4 mb-md-0">
-                <h2 class="section-title mb-3">Get in touch</h2>
-
-                <p class="text-muted mb-4">
-                    Have questions, feedback, or need support?
-                    We’d love to hear from you.
-                </p>
-
-                <div class="contact-info">
-                    <p class="mb-3">
-                        <i class="fas fa-envelope"></i>
-                        <strong>Email:</strong> rentalconnect@example.com
-                    </p>
-                    <p class="mb-3">
-                        <i class="fas fa-phone"></i>
-                        <strong>Phone:</strong> +977-98XXXXXXXX
-                    </p>
-                    <p>
-                        <i class="fas fa-map-marker-alt"></i>
-                        <strong>Location:</strong> Kathmandu, Nepal
-                    </p>
-                </div>
-            </div>
-
-            <!-- RIGHT: FORM (UI ONLY) -->
-            <div class="col-md-6">
-                <form>
-
-                    <div class="mb-3">
-                        <input type="text"
-                               class="form-control"
-                               placeholder="Your name">
-                    </div>
-
-                    <div class="mb-3">
-                        <input type="email"
-                               class="form-control"
-                               placeholder="Your email">
-                    </div>
-
-                    <div class="mb-3">
-                        <textarea class="form-control"
-                                  rows="4"
-                                  placeholder="Your message"></textarea>
-                    </div>
-
-                    <button type="button" class="btn btn-primary w-100">
-                        <i class="fas fa-paper-plane"></i> Send Message
-                    </button>
-
-
-                </form>
-            </div>
-
+<!-- CTA SECTION -->
+<div class="container">
+    <div class="cta-section">
+        <div class="mb-5 text-center">
+            <h2 class="section-title mb-2">Ready to Get Started?</h2>
+            <p class="text-muted">Choose your role and join the Rental Connect community</p>
         </div>
 
-    </div>
+        <div class="cta-cards">
+            <!-- Tenant Card -->
+            <div class="cta-card">
+                <div class="icon-large">
+                    <i class="fas fa-home"></i>
+                </div>
+                <h3>Start Renting</h3>
+                <p>Browse verified properties, connect with landlords, and find your perfect rental.</p>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'property_list' %}" class="btn-cta">
+                        <i class="fas fa-search"></i> Browse Properties
+                    </a>
+                {% else %}
+                    <a href="{% url 'register' %}" class="btn-cta">
+                        <i class="fas fa-user-plus"></i> Join as Tenant
+                    </a>
+                {% endif %}
+            </div>
 
+            <!-- Owner Card -->
+            <div class="cta-card">
+                <div class="icon-large">
+                    <i class="fas fa-building"></i>
+                </div>
+                <h3>Start Listing</h3>
+                <p>List your properties, reach verified tenants, and manage everything easily.</p>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'add_property' %}" class="btn-cta">
+                        <i class="fas fa-plus"></i> Add Property
+                    </a>
+                {% else %}
+                    <a href="{% url 'register' %}" class="btn-cta">
+                        <i class="fas fa-user-plus"></i> Join as Owner
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
 </div>
 
 {% endblock %}

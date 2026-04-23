@@ -1,184 +1,183 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="container mt-5">
-
-    <div class="row">
-
-        <!-- LEFT: PROPERTY IMAGE & INFO -->
-        <div class="col-md-7 mb-4">
-
-            <div class="card p-4">
-
-                <!-- MAIN IMAGE CAROUSEL -->
-                <div id="propertyCarousel" class="carousel slide mb-4" data-bs-ride="carousel">
-                    <div class="carousel-inner">
+<div class="container my-4">
+    <div class="row g-4">
+        <!-- LEFT: Gallery + details -->
+        <div class="col-lg-8">
+            <div class="card p-3 p-md-4">
+                <!-- Gallery -->
+                <div id="propertyCarousel" class="carousel slide mb-3" data-bs-ride="carousel">
+                    <div class="carousel-inner rounded" style="overflow:hidden;">
                         {% if property.images.all %}
                             {% for prop_image in property.images.all %}
                                 <div class="carousel-item {% if forloop.first %}active{% endif %}">
                                     <img src="{{ prop_image.image.url }}"
-                                         class="d-block w-100 rounded"
-                                         style="height:400px; object-fit:cover;"
-                                         alt="Property image">
+                                         class="d-block w-100"
+                                         style="height:420px; object-fit:cover;"
+                                         alt="{{ property.title }} image {{ forloop.counter }}">
                                 </div>
                             {% endfor %}
                         {% elif property.image %}
                             <div class="carousel-item active">
                                 <img src="{{ property.image.url }}"
-                                     class="d-block w-100 rounded"
-                                     style="height:400px; object-fit:cover;"
+                                     class="d-block w-100"
+                                     style="height:420px; object-fit:cover;"
                                      alt="{{ property.title }}">
                             </div>
                         {% else %}
                             <div class="carousel-item active">
-                                <div class="d-block w-100 rounded" style="height:400px; background:#e5e7eb; display:flex; align-items:center; justify-content:center;">
+                                <div class="d-block w-100" style="height:420px; background:var(--gray-100); display:flex; align-items:center; justify-content:center;">
                                     <span class="text-muted">No images available</span>
                                 </div>
                             </div>
                         {% endif %}
                     </div>
 
-                    <!-- Carousel controls (only show if there are multiple images) -->
                     {% if property.images.all|length > 1 %}
                         <button class="carousel-control-prev" type="button" data-bs-target="#propertyCarousel" data-bs-slide="prev">
                             <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Previous</span>
                         </button>
                         <button class="carousel-control-next" type="button" data-bs-target="#propertyCarousel" data-bs-slide="next">
                             <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Next</span>
                         </button>
                     {% endif %}
                 </div>
 
-                <!-- THUMBNAIL STRIP -->
                 {% if property.images.all|length > 1 %}
-                    <div class="d-flex gap-2 mb-4" style="overflow-x: auto; padding-bottom: 5px;">
+                    <div class="d-flex gap-2 mb-4" style="overflow-x:auto;">
                         {% for prop_image in property.images.all %}
-                            <img src="{{ prop_image.image.url }}"
-                                 class="rounded cursor-pointer"
-                                 style="height:70px; width:70px; object-fit:cover; cursor:pointer; flex-shrink:0; border: 2px solid transparent; transition: all 0.3s ease;"
-                                 data-bs-target="#propertyCarousel"
-                                 data-bs-slide-to="{{ forloop.counter0 }}"
-                                 onmouseover="this.style.borderColor='#5B2EFF'; this.style.opacity='0.8';"
-                                 onmouseout="this.style.borderColor='transparent'; this.style.opacity='1';"
-                                 alt="Thumbnail">
+                            <button class="p-0 border-0 bg-transparent" type="button"
+                                    data-bs-target="#propertyCarousel" data-bs-slide-to="{{ forloop.counter0 }}"
+                                    aria-label="View image {{ forloop.counter }}">
+                                <img src="{{ prop_image.image.url }}"
+                                     class="rounded"
+                                     style="height:72px; width:72px; object-fit:cover; border:1px solid var(--gray-200);"
+                                     alt="">
+                            </button>
                         {% endfor %}
                     </div>
                 {% endif %}
 
-                <h2 class="mb-1">{{ property.title }}</h2>
-
-                <p class="text-muted mb-2">
-                    📍 {{ property.city }}
-                </p>
-
-                <h4 class="mb-3" style="color:#5B2EFF;">
-                    Rs. {{ property.rent }} / month
-                </h4>
-
-                <p>{{ property.description }}</p>
-
-                <div class="d-flex gap-3 mt-3">
-                    <span class="badge bg-secondary">
-                        🛏 {{ property.bedrooms }} Bedrooms
-                    </span>
-                    <span class="badge bg-secondary">
-                        🚿 {{ property.bathrooms }} Bathrooms
-                    </span>
+                <!-- Title + meta -->
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-2">
+                    <div>
+                        <h2 class="mb-1">{{ property.title }}</h2>
+                        <div class="text-muted">
+                            <i class="fas fa-map-marker-alt"></i> {{ property.city }}
+                        </div>
+                    </div>
+                    <div class="text-md-end">
+                        <div class="h4 mb-0" style="color: var(--primary-600);">
+                            Rs. {{ property.rent|floatformat:0 }}
+                        </div>
+                        <div class="text-muted small">per month</div>
+                    </div>
                 </div>
 
+                <hr class="my-4">
+
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                    <span class="badge badge-primary"><i class="fas fa-bed"></i> {{ property.bedrooms }} bedrooms</span>
+                    <span class="badge badge-primary"><i class="fas fa-bath"></i> {{ property.bathrooms }} bathrooms</span>
+                    {% if property.is_verified %}
+                        <span class="badge badge-success"><i class="fas fa-shield-check"></i> Verified</span>
+                    {% endif %}
+                </div>
+
+                <h5 class="mb-2">About this property</h5>
+                <p class="mb-0">{{ property.description }}</p>
             </div>
 
+            <!-- Similar -->
+            {% if recommendations %}
+            <div class="mt-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 class="section-title mb-0" style="font-size:1.6rem;">Similar properties</h3>
+                    <a class="btn btn-outline-secondary btn-sm" href="{% url 'property_list' %}">Browse all</a>
+                </div>
+
+                <div class="row g-3">
+                    {% for rec_property in recommendations %}
+                    <div class="col-md-6 col-xl-3">
+                        <div class="property-card">
+                            <div class="card-media">
+                                {% if rec_property.image %}
+                                    <img src="{{ rec_property.image.url }}" alt="{{ rec_property.title }}">
+                                {% else %}
+                                    <div class="property-placeholder">
+                                        <i class="fas fa-home"></i>
+                                        <p>No image</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="card-body">
+                                <h5 class="mb-1">{{ rec_property.title|truncatechars:32 }}</h5>
+                                <div class="text-muted text-truncate mb-2">
+                                    <i class="fas fa-map-marker-alt"></i> {{ rec_property.city }}
+                                </div>
+                                <div class="price mb-3">Rs. {{ rec_property.rent|floatformat:0 }}/mo</div>
+                                <a href="{% url 'property_detail' rec_property.id %}" class="btn btn-outline-secondary">
+                                    View
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
         </div>
 
-        <!-- RIGHT: ACTION PANEL -->
-        <div class="col-md-5">
-
-            <div class="card p-4 sticky-top" style="top:100px;">
-
-                <h4 class="mb-3">Booking Options</h4>
+        <!-- RIGHT: Sticky booking card -->
+        <div class="col-lg-4">
+            <div class="card p-3 p-md-4 sticky-top" style="top: 92px;">
+                <h4 class="mb-1">Request to book</h4>
+                <p class="text-muted mb-3">Send dates to the owner for approval.</p>
 
                 {% if user.is_authenticated %}
-
                     {% if user.is_tenant %}
-                        <a href="{% url 'request_booking' property.id %}"
-                           class="btn btn-primary w-100 mb-2">
-                            <i class="fas fa-calendar"></i> Request Booking
+                        <a href="{% url 'request_booking' property.id %}" class="btn btn-primary w-100 mb-2">
+                            <i class="fas fa-calendar"></i>
+                            Request booking
                         </a>
 
-                        <a href="#" 
-                           class="btn btn-outline-secondary w-100 mb-2"
-                           data-bs-toggle="modal" 
-                           data-bs-target="#contactOwnerModal">
-                            <i class="fas fa-comments"></i> Contact Owner
-                        </a>
+                        <button class="btn btn-outline-secondary w-100 mb-2" type="button"
+                                data-bs-toggle="modal" data-bs-target="#contactOwnerModal">
+                            <i class="fas fa-comments"></i>
+                            Message owner
+                        </button>
 
-                        <p class="text-muted small text-center">
-                            Questions? Contact the owner first!
-                        </p>
-
-                    {% elif user.is_landlord %}
-                        <div class="alert alert-info text-center">
-                            You are the owner of this property.
+                        <div class="alert alert-info mb-0">
+                            Use messages to confirm dates, payment method, and handover timing.
                         </div>
-
+                    {% elif user.is_landlord %}
+                        <div class="alert alert-info text-center mb-0">
+                            You own this property.
+                        </div>
                     {% else %}
-                        <div class="alert alert-secondary text-center">
+                        <div class="alert alert-secondary text-center mb-0">
                             Admin preview mode
                         </div>
                     {% endif %}
-
                 {% else %}
-                    <a href="{% url 'login' %}"
-                       class="btn btn-outline-primary w-100">
-                        Login to Book
+                    <a href="{% url 'login' %}" class="btn btn-primary w-100">
+                        Login to request
                     </a>
+                    <p class="text-muted small text-center mt-2 mb-0">
+                        No payment is collected online in this project.
+                    </p>
                 {% endif %}
-
             </div>
-
-        </div>
-
-    </div>
-
-    <!-- RECOMMENDED PROPERTIES -->
-    {% if recommendations %}
-    <div class="mt-5">
-        <h3 class="section-title mb-4">Similar Properties You Might Like</h3>
-
-        <div class="row">
-            {% for rec_property in recommendations %}
-            <div class="col-md-3 mb-4">
-                <div class="property-card">
-                    {% if rec_property.image %}
-                    <img src="{{ rec_property.image.url }}" alt="{{ rec_property.title }}">
-                    {% else %}
-                    <div style="height:180px; background:#e5e7eb;"></div>
-                    {% endif %}
-
-                    <div class="p-3">
-                        <h6 class="mb-1">{{ rec_property.title|truncatechars:30 }}</h6>
-                        <p class="text-muted small mb-1">
-                            📍 {{ rec_property.city }}
-                        </p>
-                        <p class="fw-bold mb-2" style="color:#5B2EFF; font-size:0.9rem;">
-                            Rs. {{ rec_property.rent }} / month
-                        </p>
-                        <a href="{% url 'property_detail' rec_property.id %}"
-                           class="btn btn-sm btn-outline-primary w-100">
-                            View Details
-                        </a>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
         </div>
     </div>
-    {% endif %}
 
 </div>
 
 <!-- CONTACT OWNER MODAL -->
-<div class="modal fade" id="contactOwnerModal" tabindex="-1" style="--bs-modal-width: 600px;">
+<div class="modal fade" id="contactOwnerModal" tabindex="-1" style="--bs-modal-width: 680px;">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
@@ -188,31 +187,27 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <div class="card bg-light mb-3">
+                <div class="card mb-3" style="background: var(--gray-50);">
                     <div class="card-body">
-                        <h6 class="mb-2">{{ property.title }}</h6>
-                        <p class="text-muted mb-0">📍 {{ property.city }}</p>
+                        <div class="d-flex justify-content-between align-items-start gap-2">
+                            <div>
+                                <strong>{{ property.title }}</strong>
+                                <div class="text-muted small"><i class="fas fa-map-marker-alt"></i> {{ property.city }}</div>
+                            </div>
+                            <div class="text-muted small">Owner contact</div>
+                        </div>
                     </div>
                 </div>
 
                 <!-- OWNER INFO AT TOP -->
                 <div class="mb-3">
-                    <strong>Owner Information:</strong><br>
-                    <p class="mb-1">
-                        <i class="fas fa-user"></i> 
-                        {{ property.landlord.first_name }} {{ property.landlord.last_name }}
-                    </p>
-                    <p class="mb-1">
-                        <i class="fas fa-envelope"></i> 
-                        <a href="mailto:{{ property.landlord.email }}">
-                            {{ property.landlord.email }}
-                        </a>
-                    </p>
+                    <strong>Owner</strong>
+                    <div class="mt-2">
+                        <div class="mb-1"><i class="fas fa-user"></i> {{ property.landlord.first_name }} {{ property.landlord.last_name }}</div>
+                        <div class="mb-1"><i class="fas fa-envelope"></i> <a href="mailto:{{ property.landlord.email }}">{{ property.landlord.email }}</a></div>
+                    </div>
                     {% if property.landlord.profile.phone %}
-                    <p class="mb-0">
-                        <i class="fas fa-phone"></i> 
-                        {{ property.landlord.profile.phone }}
-                    </p>
+                        <div class="mb-0"><i class="fas fa-phone"></i> {{ property.landlord.profile.phone }}</div>
                     {% endif %}
                 </div>
 
@@ -240,49 +235,48 @@
                             </a>
                         {% endif %}
                     </div>
-                    <div style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); border-radius: 12px; padding: 15px; height: 300px; display: flex; flex-direction: column;">
+                    <div class="card p-3" style="background: var(--gray-50);">
                         
                         <!-- MESSAGES CONTAINER -->
-                        <div style="flex: 1; overflow-y: auto; margin-bottom: 15px; padding-right: 5px;" id="messagesContainer">
+                        <div style="height: 280px; overflow-y: auto;" class="mb-3" id="messagesContainer">
                             {% if messages %}
                                 {% for message in messages %}
                                     {% if message.sender.id == user.id %}
-                                        <!-- USER MESSAGE (RIGHT) -->
-                                        <div style="display: flex; justify-content: flex-end; margin-bottom: 12px;">
-                                            <div style="background: #007bff; color: white; padding: 10px 14px; border-radius: 18px; max-width: 75%; word-wrap: break-word; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                                                <p style="margin: 0; font-size: 0.95rem;">{{ message.content }}</p>
-                                                <small style="opacity: 0.8; font-size: 0.75rem;">{{ message.created_at|date:"H:i" }}</small>
+                                        <div class="d-flex justify-content-end mb-2">
+                                            <div class="p-2 px-3" style="background: var(--primary-600); color: white; border-radius: 16px; max-width: 80%;">
+                                                <div style="white-space: pre-wrap;">{{ message.content }}</div>
+                                                <div class="small" style="opacity: 0.85;">{{ message.created_at|date:"H:i" }}</div>
                                             </div>
                                         </div>
                                     {% else %}
-                                        <!-- OTHER USER MESSAGE (LEFT) -->
-                                        <div style="display: flex; justify-content: flex-start; margin-bottom: 12px;">
-                                            <div style="background: white; color: #333; padding: 10px 14px; border-radius: 18px; max-width: 75%; word-wrap: break-word; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                                                <strong style="font-size: 0.85rem;">{{ message.sender.first_name }}</strong>
-                                                <p style="margin: 4px 0 0 0; font-size: 0.95rem;">{{ message.content }}</p>
-                                                <small style="opacity: 0.6; font-size: 0.75rem;">{{ message.created_at|date:"H:i" }}</small>
+                                        <div class="d-flex justify-content-start mb-2">
+                                            <div class="p-2 px-3" style="background: white; border: 1px solid var(--gray-200); border-radius: 16px; max-width: 80%;">
+                                                <div class="small text-muted fw-bold">{{ message.sender.first_name }}</div>
+                                                <div style="white-space: pre-wrap;">{{ message.content }}</div>
+                                                <div class="small text-muted">{{ message.created_at|date:"H:i" }}</div>
                                             </div>
                                         </div>
                                     {% endif %}
                                 {% endfor %}
                             {% else %}
-                                <div style="text-align: center; color: #666; padding: 20px 0;">
-                                    <p style="font-size: 0.9rem;">No messages yet. Start the conversation!</p>
+                                <div class="text-center text-muted py-4">
+                                    No messages yet.
                                 </div>
                             {% endif %}
                         </div>
 
                         <!-- MESSAGE INPUT -->
-                        <form method="POST" action="{% url 'booking_messages' active_booking.id %}" style="display: flex; gap: 8px;">
+                        <form method="POST" action="{% url 'booking_messages' active_booking.id %}" class="d-flex gap-2">
                             {% csrf_token %}
-                            <input type="text" 
+                            <input type="text"
                                    name="content" 
-                                   placeholder="Type your message..." 
-                                   style="flex: 1; padding: 10px 14px; border: 1px solid #ddd; border-radius: 20px; font-size: 0.9rem; outline: none;"
+                                   class="form-control"
+                                   placeholder="Type a message"
                                    autocomplete="off"
                                    required>
                             <button type="submit" 
-                                    style="background: #007bff; color: white; border: none; padding: 10px 16px; border-radius: 50%; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px;">
+                                    class="btn btn-primary"
+                                    aria-label="Send message">
                                 <i class="fas fa-paper-plane"></i>
                             </button>
                         </form>
@@ -315,7 +309,7 @@
                 {% endif %}
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
                 {% if not active_booking %}
                     <a href="{% url 'request_booking' property.id %}" class="btn btn-primary">
                         <i class="fas fa-calendar"></i> Make a Booking Request

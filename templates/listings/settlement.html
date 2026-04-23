@@ -1,170 +1,173 @@
 {% extends "base.html" %}
-{% load static %}
 {% block content %}
-<div class="container mt-5">
-    <h3>Settlement for Exit {{ exit.id }}</h3>
-    <div class="card mb-4">
-        <div class="card-body">
-            <p><strong>Total Due:</strong> Rs. {{ settlement.total_due }}</p>
-            <p><strong>Total Credit:</strong> Rs. {{ settlement.total_credit }}</p>
-            <p><strong>Refund to Tenant:</strong> Rs. {{ settlement.net_refund_to_tenant }}</p>
-            <p><strong>Payable to Owner:</strong> Rs. {{ settlement.net_payable_to_owner }}</p>
-            <p><strong>Status:</strong>
-                <span class="badge
-                    {% if settlement.status == 'completed' %}bg-success
-                    {% elif settlement.status == 'disputed' %}bg-danger
-                    {% else %}bg-warning{% endif %}">
-                    {{ settlement.get_status_display }}
-                </span>
-            </p>
-            {% if settlement.payment_status != 'pending' %}
-            <p><strong>Payment Status:</strong>
-                <span class="badge
-                    {% if settlement.payment_status == 'completed' %}bg-success
-                    {% elif settlement.payment_status == 'failed' %}bg-danger
-                    {% else %}bg-info{% endif %}">
-                    {{ settlement.get_payment_status_display }}
-                </span>
-            </p>
-            {% if settlement.payment_gateway %}
-            <p><strong>Payment Gateway:</strong> {{ settlement.get_payment_gateway_display }}</p>
-            {% endif %}
-            {% endif %}
+
+<div class="container my-4">
+    <div class="d-flex justify-content-between align-items-end mb-4">
+        <div>
+            <h2 class="section-title mb-1">Settlement</h2>
+            <p class="text-muted mb-0">Exit request #{{ exit.id }} • Booking #{{ settlement.lease.id }}</p>
+        </div>
+        <a class="btn btn-outline-secondary btn-sm" href="{% url 'early_exit_detail' exit.id %}">Back</a>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card p-3">
+                <div class="text-muted small">Total due</div>
+                <div class="h5 mb-0">Rs. {{ settlement.total_due }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card p-3">
+                <div class="text-muted small">Total credit</div>
+                <div class="h5 mb-0">Rs. {{ settlement.total_credit }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card p-3">
+                <div class="text-muted small">Refund to tenant</div>
+                <div class="h5 mb-0">Rs. {{ settlement.net_refund_to_tenant }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card p-3">
+                <div class="text-muted small">Payable to owner</div>
+                <div class="h5 mb-0">Rs. {{ settlement.net_payable_to_owner }}</div>
+            </div>
         </div>
     </div>
 
-    {% if settlement.status == 'completed' and settlement.payment_status == 'pending' %}
-        {% if settlement.net_payable_to_owner > 0 or settlement.net_refund_to_tenant > 0 %}
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5>Payment Required</h5>
+    <div class="card p-3 p-md-4 mb-4">
+        <div class="d-flex justify-content-between align-items-start gap-2">
+            <div>
+                <h4 class="mb-1">Status</h4>
+                <div class="text-muted small">Tenant and owner must accept before payment verification starts.</div>
             </div>
-            <div class="card-body">
-                {% if settlement.net_payable_to_owner > 0 %}
-                <p>You need to pay <strong>Rs. {{ settlement.net_payable_to_owner }}</strong> to the landlord.</p>
+            <div class="text-end">
+                {% if settlement.status == 'completed' %}
+                    <span class="badge bg-success">Completed</span>
+                {% elif settlement.status == 'disputed' %}
+                    <span class="badge bg-danger">Disputed</span>
                 {% else %}
-                <p>You will receive a refund of <strong>Rs. {{ settlement.net_refund_to_tenant }}</strong> from the landlord.</p>
+                    <span class="badge bg-warning text-dark">{{ settlement.get_status_display }}</span>
                 {% endif %}
-
-                <a href="{% url 'payment_gateway_selection' settlement.id %}" class="btn btn-primary">
-                    <i class="fas fa-credit-card"></i> Proceed to Payment
-                </a>
-            </div>
-        </div>
-        {% endif %}
-    {% endif %}
-
-    {% if settlement.status != 'completed' %}
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="btn btn-primary">Submit</button>
-        <a href="{% url 'early_exit_detail' exit.id %}" class="btn btn-secondary">Back</a>
-    </form>
-    {% else %}
-    <a href="{% url 'early_exit_detail' exit.id %}" class="btn btn-secondary">Back</a>
-    {% endif %}
-</div>
-
-<!-- Payment Gateway Selection Modal -->
-<div class="modal fade" id="paymentModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Confirm Payment</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <p id="paymentMessage"></p>
-                <div id="stripePaymentElement" style="display: none;">
-                    <!-- Stripe Elements will be inserted here -->
+                <div class="text-muted small mt-1">
+                    Payment: {{ settlement.get_payment_status_display }}
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="confirmPaymentBtn" style="display: none;">Confirm Payment</button>
+        </div>
+
+        {% if settlement.notes %}
+            <hr class="my-3">
+            <div class="text-muted small" style="white-space: pre-wrap;">{{ settlement.notes }}</div>
+        {% endif %}
+    </div>
+
+    {% if settlement.status != 'completed' %}
+        <div class="card p-3 p-md-4">
+            <h4 class="mb-3">Review settlement</h4>
+            <form method="post" class="d-grid gap-3">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                    <a href="{% url 'early_exit_detail' exit.id %}" class="btn btn-outline-secondary">Back</a>
+                </div>
+            </form>
+        </div>
+    {% else %}
+        <div class="row g-4">
+            <div class="col-lg-6">
+                <div class="card p-3 p-md-4 h-100">
+                    <h4 class="mb-2">Manual payment</h4>
+                    <p class="text-muted mb-3">No payment gateway is used. Upload proof, then the other party confirms receipt.</p>
+
+                    {% if settlement.net_payable_to_owner > 0 %}
+                        <div class="alert alert-info">
+                            Tenant needs to pay <strong>Rs. {{ settlement.net_payable_to_owner }}</strong> to the owner.
+                        </div>
+                    {% elif settlement.net_refund_to_tenant > 0 %}
+                        <div class="alert alert-info">
+                            Owner needs to refund <strong>Rs. {{ settlement.net_refund_to_tenant }}</strong> to the tenant.
+                        </div>
+                    {% else %}
+                        <div class="alert alert-success mb-0">
+                            No payment is required. Settlement can be closed.
+                        </div>
+                    {% endif %}
+
+                    {% if settlement.net_payable_to_owner > 0 %}
+                        {% if user == exit.booking.tenant %}
+                            <hr class="my-3">
+                            <form method="post" enctype="multipart/form-data" class="d-grid gap-3">
+                                {% csrf_token %}
+                                <input type="hidden" name="intent" value="upload_proof">
+                                <div>
+                                    <label class="form-label">Transaction reference (optional)</label>
+                                    <input class="form-control" name="tenant_payment_reference" value="{{ settlement.tenant_payment_reference }}" placeholder="UPI / bank reference">
+                                </div>
+                                <div>
+                                    <label class="form-label">Proof of payment</label>
+                                    <input class="form-control" type="file" name="tenant_payment_proof" required>
+                                    <small class="text-muted">Upload JPG/PNG/PDF.</small>
+                                </div>
+                                <button class="btn btn-primary" type="submit">Submit proof</button>
+                            </form>
+                        {% else %}
+                            <div class="text-muted small">Tenant uploads proof here.</div>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="card p-3 p-md-4 h-100">
+                    <h4 class="mb-2">Verification</h4>
+                    <p class="text-muted mb-3">Owner confirms receipt after reviewing proof.</p>
+
+                    {% if settlement.tenant_payment_proof %}
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <div class="fw-bold">Proof uploaded</div>
+                                <div class="text-muted small">
+                                    {% if settlement.tenant_payment_reference %}Ref: {{ settlement.tenant_payment_reference }} • {% endif %}
+                                    {{ settlement.tenant_payment_submitted_at|date:"M d, Y H:i" }}
+                                </div>
+                            </div>
+                            <a class="btn btn-outline-secondary btn-sm" href="{{ settlement.tenant_payment_proof.url }}" target="_blank">View</a>
+                        </div>
+
+                        {% if user == exit.booking.property.landlord and settlement.payment_status != 'completed' %}
+                            <form method="post" class="d-grid gap-3">
+                                {% csrf_token %}
+                                <input type="hidden" name="intent" value="confirm_receipt">
+                                <div>
+                                    <label class="form-label">Confirmation note (optional)</label>
+                                    <textarea class="form-control" name="owner_receipt_note" rows="3" placeholder="e.g., Received in bank account."></textarea>
+                                </div>
+                                <button class="btn btn-success" type="submit">Confirm receipt</button>
+                            </form>
+                        {% endif %}
+                    {% else %}
+                        <div class="card p-4 text-center" style="background: var(--gray-50);">
+                            <div class="mb-3" aria-hidden="true" style="font-size: 3rem; color: var(--gray-300);">
+                                <i class="fas fa-receipt"></i>
+                            </div>
+                            <h5 class="mb-1">Waiting for proof</h5>
+                            <p class="text-muted mb-0">Once proof is submitted, it will appear here for verification.</p>
+                        </div>
+                    {% endif %}
+
+                    {% if settlement.payment_status == 'completed' %}
+                        <hr class="my-3">
+                        <div class="alert alert-success mb-0">
+                            Payment confirmed on {{ settlement.payment_completed_at|date:"M d, Y H:i" }}.
+                        </div>
+                    {% endif %}
+                </div>
             </div>
         </div>
-    </div>
+    {% endif %}
 </div>
 
-<script src="https://js.stripe.com/v3/"></script>
-<script>
-let stripe = Stripe('{{ stripe_public_key|default:"pk_test_your_stripe_public_key" }}');
-let elements;
-let selectedGateway = '';
-
-function selectGateway(gateway) {
-    selectedGateway = gateway;
-    const modal = new bootstrap.Modal(document.getElementById('paymentModal'));
-    const messageEl = document.getElementById('paymentMessage');
-    const stripeElement = document.getElementById('stripePaymentElement');
-    const confirmBtn = document.getElementById('confirmPaymentBtn');
-
-    if (gateway === 'stripe') {
-        messageEl.textContent = 'Processing payment with Stripe...';
-        stripeElement.style.display = 'block';
-        confirmBtn.style.display = 'block';
-
-        // Initialize Stripe Elements
-        fetch('/listings/settlement/{{ settlement.id }}/stripe/initiate/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.error) {
-                alert('Error: ' + data.error);
-                return;
-            }
-
-            elements = stripe.elements();
-            const paymentElement = elements.create('payment');
-            paymentElement.mount('#stripePaymentElement');
-
-            confirmBtn.onclick = function() {
-                stripe.confirmPayment({
-                    elements,
-                    confirmParams: {
-                        return_url: '{% url "payment_success" %}',
-                    },
-                });
-            };
-        });
-
-    } else if (gateway === 'esewa') {
-        messageEl.textContent = 'Redirecting to eSewa...';
-        stripeElement.style.display = 'none';
-        confirmBtn.style.display = 'block';
-
-        confirmBtn.onclick = function() {
-            fetch('/listings/settlement/{{ settlement.id }}/esewa/initiate/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.payment_url) {
-                    window.location.href = data.payment_url;
-                } else {
-                    alert('Error: ' + (data.error || 'Unknown error'));
-                }
-            });
-        };
-
-    } else if (gateway === 'khalti') {
-        messageEl.textContent = 'Khalti integration coming soon...';
-        stripeElement.style.display = 'none';
-        confirmBtn.style.display = 'none';
-    }
-
-    modal.show();
-}
-</script>
 {% endblock %}

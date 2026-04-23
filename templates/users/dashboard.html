@@ -1,156 +1,297 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="container mt-5">
-
-    <!-- HEADER -->
-    <div class="d-flex justify-content-between align-items-center mb-5">
+<div class="container my-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-end gap-3 mb-4">
         <div>
             <h2 class="section-title mb-1">Dashboard</h2>
-            <p class="text-muted">
-                Welcome, <strong>{{ request.user.username }}</strong>
-            </p>
+            <p class="text-muted mb-0">Signed in as <strong>{{ request.user.username }}</strong></p>
         </div>
 
-        <div class="text-end">
-            <span class="badge bg-primary mb-2">
-                {% if is_tenant %}Tenant{% elif is_landlord %}Landlord{% else %}Admin{% endif %}
+        <div class="d-flex gap-2 align-items-center">
+            <span class="badge bg-primary">
+                {% if is_tenant %}Tenant{% elif is_landlord %}Owner{% else %}Admin{% endif %}
             </span>
-
-            <div class="mt-2">
-                <a href="{% url 'update_profile' %}" class="btn btn-sm btn-outline-secondary">
-                    Update Profile
-                </a>
-
-                <form method="post" action="{% url 'logout' %}" class="d-inline">
-                    {% csrf_token %}
-                    <button class="btn btn-sm btn-outline-danger">
-                        Logout
-                    </button>
-                </form>
-            </div>
+            <a href="{% url 'update_profile' %}" class="btn btn-outline-secondary btn-sm">Update profile</a>
         </div>
     </div>
 
     <!-- ================= TENANT DASHBOARD ================= -->
     {% if is_tenant %}
-    <div class="row mb-4">
-        <div class="col-md-3 mb-3">
-            <div class="card p-3">
-                <small class="text-muted">Total Requests</small>
-                <div class="h4 mb-0">{{ stats.total_bookings|default:0 }}</div>
+        <div class="card p-3 p-md-4 mb-4">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
+                <div>
+                    <h4 class="mb-1">Search</h4>
+                    <p class="text-muted mb-0">Start with a city or use distance ordering on the listings page.</p>
+                </div>
+                <form class="d-flex gap-2 w-100 w-md-auto" method="get" action="{% url 'property_list' %}">
+                    <input class="form-control" name="q" placeholder="Search properties">
+                    <button class="btn btn-primary" type="submit"><i class="fas fa-search"></i> Explore</button>
+                </form>
             </div>
         </div>
-        <div class="col-md-3 mb-3">
-            <div class="card p-3">
-                <small class="text-muted">Pending</small>
-                <div class="h4 mb-0">{{ stats.pending_bookings|default:0 }}</div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="card p-3">
-                <small class="text-muted">Approved</small>
-                <div class="h4 mb-0">{{ stats.approved_bookings|default:0 }}</div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="card p-3">
-                <small class="text-muted">Rejected</small>
-                <div class="h4 mb-0">{{ stats.rejected_bookings|default:0 }}</div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="card p-3">
-                <small class="text-muted">Exit Requests</small>
-                <div class="h4 mb-0">{{ stats.exit_requests|default:0 }}</div>
-            </div>
-        </div>
-    </div>
 
-    <div class="card p-4">
-        <h4 class="mb-3">My Booking Requests</h4>
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-lg-4">
+                <div class="card p-3 text-center">
+                    <div class="text-muted small">Active Bookings</div>
+                    <div class="h4 mb-0">{{ stats.active_bookings|default:0 }}</div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-4">
+                <div class="card p-3 text-center">
+                    <div class="text-muted small">Pending Requests</div>
+                    <div class="h4 mb-0">{{ stats.pending_bookings|default:0 }}</div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-4">
+                <div class="card p-3 text-center">
+                    <div class="text-muted small">Saved Properties</div>
+                    <div class="h4 mb-0">0</div>
+                </div>
+            </div>
+        </div>
 
-        {% if bookings %}
-            <div class="list-group">
-                {% for booking in bookings %}
-                <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-start" 
-                     style="cursor:pointer;" 
-                     onclick="window.location.href='{% url 'booking_detail' booking.id %}';">
-                    <div>
-                        <strong>{{ booking.property.title }}</strong><br>
-                        <small class="text-muted">{{ booking.start_date }} → {{ booking.end_date }}</small>
-                        <div class="mt-2">
-                            {% if booking.status == 'approved' %}
-                                <span class="badge bg-success">Approved</span>
-                            {% elif booking.status == 'rejected' %}
-                                <span class="badge bg-danger">Rejected</span>
-                            {% else %}
-                                <span class="badge bg-warning text-dark">Pending</span>
-                            {% endif %}
+        <div class="card p-3 p-md-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h4 class="mb-0">My Booking Requests</h4>
+                    <div class="text-muted small">Track status, dates, and messaging per booking.</div>
+                </div>
+                <a class="btn btn-outline-secondary btn-sm" href="{% url 'property_list' %}">Browse</a>
+            </div>
+
+            {% if bookings %}
+                <div class="row g-3">
+                    {% for booking in bookings %}
+                    <div class="col-12 col-md-6 col-lg-4">
+                        <div class="card h-100">
+                            <div class="card-body d-flex flex-column">
+                                {% if booking.property.image %}
+                                    <img src="{{ booking.property.image.url }}" alt="" class="rounded mb-3" style="width:100%; height:120px; object-fit:cover;">
+                                {% else %}
+                                    <div class="rounded d-flex align-items-center justify-content-center mb-3" style="width:100%; height:120px; background: var(--gray-100); color: var(--gray-500);">
+                                        <i class="fas fa-home"></i>
+                                    </div>
+                                {% endif %}
+
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h6 class="card-title mb-1">{{ booking.property.title }}</h6>
+                                        {% if booking.status == 'approved' or booking.status == 'rented_out' %}
+                                            <span class="badge bg-success">Confirmed</span>
+                                        {% elif booking.status == 'rejected' or booking.status == 'cancelled' %}
+                                            <span class="badge bg-danger">Rejected</span>
+                                        {% else %}
+                                            <span class="badge bg-warning text-dark">Pending</span>
+                                        {% endif %}
+                                    </div>
+
+                                    <p class="text-muted small mb-2">
+                                        <i class="fas fa-user"></i> {{ booking.property.landlord.first_name }} {{ booking.property.landlord.last_name }}
+                                        <span class="mx-2">•</span>
+                                        <i class="fas fa-map-marker-alt"></i> {{ booking.property.city }}
+                                    </p>
+
+                                    {% if booking.distance %}
+                                        <p class="text-muted small mb-2">
+                                            <i class="fas fa-route"></i> {{ booking.distance|floatformat:1 }} km away
+                                        </p>
+                                    {% endif %}
+
+                                    <div class="row g-2 mb-2">
+                                        <div class="col-6">
+                                            <div class="text-muted small">Dates</div>
+                                            <div class="text-dark small">{{ booking.start_date }} → {{ booking.end_date }}</div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="text-muted small">Monthly rent</div>
+                                            <div class="text-dark small">Rs. {{ booking.monthly_rent|default:booking.property.rent|floatformat:0 }}</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="text-muted small mb-3">
+                                        Requested {{ booking.created_at|date:"M d, Y" }}
+                                    </div>
+                                </div>
+
+                                <div class="d-flex flex-column gap-2 mt-auto">
+                                    <div class="d-flex gap-2">
+                                        <a href="{% url 'booking_detail' booking.id %}" class="btn btn-outline-primary btn-sm flex-grow-1">
+                                            View Details
+                                        </a>
+                                        {% if booking.status == 'pending' and booking.start_date > today or booking.status == 'approved' and booking.start_date > today %}
+                                            <a href="{% url 'cancel_booking' booking.id %}" class="btn btn-outline-danger btn-sm" onclick="event.stopPropagation();">
+                                                Cancel
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                    {% if booking.status == 'approved' or booking.status == 'rented_out' %}
+                                        {% if not booking.early_exit %}
+                                            <a href="{% url 'request_early_exit' booking.id %}" class="btn btn-outline-warning btn-sm w-100">
+                                                <i class="fas fa-door-open"></i> Early Exit
+                                            </a>
+                                        {% else %}
+                                            <button class="btn btn-outline-secondary btn-sm w-100" disabled>
+                                                <i class="fas fa-check"></i> Exit Requested
+                                            </button>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="d-flex align-items-center">
-                        <span class="me-2 small text-primary">
-                            <i class="fas fa-comments"></i> View &amp; Message
-                        </span>
-                        {% if booking.status == 'pending' and booking.start_date > today or booking.status == 'approved' and booking.start_date > today %}
-                            <a href="{% url 'cancel_booking' booking.id %}" class="btn btn-sm btn-danger ms-2" onclick="event.stopPropagation();">
-                                <i class="fas fa-times"></i> Cancel
-                            </a>
-                        {% endif %}
-                    </div>
+                    {% endfor %}
                 </div>
-                {% endfor %}
+            {% else %}
+                <div class="card p-4 text-center" style="background: var(--gray-50);">
+                    <div class="mb-3" aria-hidden="true" style="font-size: 3rem; color: var(--gray-400);">
+                        <i class="fas fa-calendar-plus"></i>
+                    </div>
+                    <h4 class="mb-2">No booking requests</h4>
+                    <p class="text-muted mb-3">You haven't requested any properties yet.</p>
+                    <a class="btn btn-primary" href="{% url 'property_list' %}">Start browsing</a>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- EARLY EXIT REQUESTS -->
+        <div class="card p-3 p-md-4">
+            <div>
+                <h4 class="mb-0">Early Exit Requests</h4>
+                <div class="text-muted small">Track and manage your early termination requests.</div>
             </div>
-        {% else %}
-            <p class="text-muted">No booking requests yet.</p>
-        {% endif %}
-    </div>
+
+            {% if early_exits %}
+                <div class="row g-3 mt-3">
+                    {% for exit in early_exits %}
+                    <div class="col-12 col-md-6 col-lg-4">
+                        <div class="card h-100">
+                            <div class="card-body d-flex flex-column">
+                                <div class="mb-2">
+                                    <h6 class="card-title mb-1">{{ exit.booking.property.title }}</h6>
+                                    <p class="text-muted small mb-0">
+                                        <i class="fas fa-map-marker-alt"></i> {{ exit.booking.property.city }}
+                                    </p>
+                                </div>
+
+                                <div class="mb-3">
+                                    {% if exit.status == 'requested' %}
+                                        <span class="badge bg-warning text-dark">Pending Approval</span>
+                                    {% elif exit.status == 'owner_approved' %}
+                                        <span class="badge bg-info">Owner Approved</span>
+                                    {% elif exit.status == 'owner_rejected' %}
+                                        <span class="badge bg-danger">Rejected</span>
+                                    {% elif exit.status == 'inspection_scheduled' %}
+                                        <span class="badge bg-primary">Inspection Scheduled</span>
+                                    {% elif exit.status == 'inspection_completed' %}
+                                        <span class="badge bg-info">Inspection Done</span>
+                                    {% elif exit.status == 'settlement_confirmed' %}
+                                        <span class="badge bg-success">Settlement Confirmed</span>
+                                    {% elif exit.status == 'lease_terminated' %}
+                                        <span class="badge bg-success">Lease Terminated</span>
+                                    {% elif exit.status == 'disputed' %}
+                                        <span class="badge bg-danger">Disputed</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ exit.get_status_display }}</span>
+                                    {% endif %}
+                                </div>
+
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6">
+                                        <div class="text-muted small">Requested</div>
+                                        <div class="text-dark small">{{ exit.request_date|date:"M d, Y" }}</div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="text-muted small">Desired Move-out</div>
+                                        <div class="text-dark small">{{ exit.desired_move_out|date:"M d, Y" }}</div>
+                                    </div>
+                                </div>
+
+                                {% if exit.status == 'owner_rejected' and exit.owner_comments %}
+                                    <div class="alert alert-warning alert-sm mb-3" style="font-size: 0.85rem;">
+                                        <strong>Owner's comment:</strong> {{ exit.owner_comments }}
+                                    </div>
+                                {% endif %}
+
+                                {% if exit.penalty_amount > 0 or exit.deductions > 0 %}
+                                    <div class="row g-2 mb-3">
+                                        {% if exit.penalty_amount > 0 %}
+                                            <div class="col-6">
+                                                <div class="text-muted small">Penalty</div>
+                                                <div class="text-dark small">Rs. {{ exit.penalty_amount|floatformat:0 }}</div>
+                                            </div>
+                                        {% endif %}
+                                        {% if exit.deductions > 0 %}
+                                            <div class="col-6">
+                                                <div class="text-muted small">Deductions</div>
+                                                <div class="text-dark small">Rs. {{ exit.deductions|floatformat:0 }}</div>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+
+                                {% if exit.refund_amount > 0 %}
+                                    <div class="alert alert-success alert-sm mb-3" style="font-size: 0.85rem;">
+                                        <strong>Refund:</strong> Rs. {{ exit.refund_amount|floatformat:0 }}
+                                    </div>
+                                {% endif %}
+
+                                <a href="{% url 'early_exit_detail' exit.id %}" class="btn btn-outline-primary btn-sm w-100 mt-auto">
+                                    View Details
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="card p-4 text-center" style="background: var(--gray-50); margin-top: 1rem;">
+                    <div class="mb-3" aria-hidden="true" style="font-size: 3rem; color: var(--gray-400);">
+                        <i class="fas fa-door-open"></i>
+                    </div>
+                    <h4 class="mb-2">No early exit requests</h4>
+                    <p class="text-muted mb-0">You haven't submitted any early termination requests yet.</p>
+                </div>
+            {% endif %}
+        </div>
     {% endif %}
 
     <!-- ================= LANDLORD DASHBOARD ================= -->
     {% if is_landlord %}
 
-    <div class="row mb-4">
-        <div class="col-md-3 mb-3">
-            <div class="card p-3">
-                <small class="text-muted">Total Properties</small>
-                <div class="h4 mb-0">{{ stats.total_properties|default:0 }}</div>
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-lg-3">
+                <div class="card p-3">
+                    <div class="text-muted small">Properties</div>
+                    <div class="h4 mb-0">{{ stats.total_properties|default:0 }}</div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="card p-3">
+                    <div class="text-muted small">Verified</div>
+                    <div class="h4 mb-0">{{ stats.verified_properties|default:0 }}</div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="card p-3">
+                    <div class="text-muted small">Pending requests</div>
+                    <div class="h4 mb-0">{{ stats.pending_booking_requests|default:0 }}</div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="card p-3">
+                    <div class="text-muted small">Exit requests</div>
+                    <div class="h4 mb-0">{{ stats.exit_requests|default:0 }}</div>
+                </div>
             </div>
         </div>
-        <div class="col-md-3 mb-3">
-            <div class="card p-3">
-                <small class="text-muted">Verified</small>
-                <div class="h4 mb-0">{{ stats.verified_properties|default:0 }}</div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="card p-3">
-                <small class="text-muted">Unverified</small>
-                <div class="h4 mb-0">{{ stats.unverified_properties|default:0 }}</div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="card p-3">
-                <small class="text-muted">Pending Requests</small>
-                <div class="h4 mb-0">{{ stats.pending_booking_requests|default:0 }}</div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="card p-3">
-                <small class="text-muted">Exit Requests</small>
-                <div class="h4 mb-0">{{ stats.exit_requests|default:0 }}</div>
-            </div>
-        </div>
-    </div>
 
     <!-- MY PROPERTIES -->
-    <div class="card p-4 mb-4">
+    <div class="card p-3 p-md-4 mb-4">
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h4>My Properties</h4>
-            <a href="{% url 'add_property' %}" class="btn btn-primary btn-sm">
-                + Add Property
-            </a>
+            <h4 class="mb-0">My listings</h4>
+            <a href="{% url 'add_property' %}" class="btn btn-primary btn-sm">Add listing</a>
         </div>
 
         {% if properties %}
@@ -159,7 +300,8 @@
                 <div class="list-group-item d-flex justify-content-between align-items-center">
                     <div>
                         <strong>{{ property.title }}</strong><br>
-                        {{ property.city }} – Rs. {{ property.rent }}
+                        <span class="text-muted small"><i class="fas fa-map-marker-alt"></i> {{ property.city }}</span>
+                        <span class="ms-2 text-muted small">Rs. {{ property.rent|floatformat:0 }}/mo</span>
                         {% if property.is_verified %}
                             <span class="badge bg-success ms-2">Verified</span>
                         {% else %}
@@ -182,13 +324,23 @@
                 {% endfor %}
             </div>
         {% else %}
-            <p class="text-muted">You haven’t listed any properties yet.</p>
+            <div class="card p-4 text-center" style="background: var(--gray-50);">
+                <div class="mb-3" aria-hidden="true" style="font-size: 3rem; color: var(--gray-400);">
+                    <i class="fas fa-building"></i>
+                </div>
+                <h4 class="mb-2">No listings yet</h4>
+                <p class="text-muted mb-3">Add your first property to start receiving requests.</p>
+                <a class="btn btn-primary" href="{% url 'add_property' %}">Add a listing</a>
+            </div>
         {% endif %}
     </div>
 
     <!-- BOOKING REQUESTS -->
-    <div class="card p-4">
-        <h4 class="mb-3">Booking Requests</h4>
+    <div class="card p-3 p-md-4" id="requests">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="mb-0">Booking requests</h4>
+            <a class="btn btn-outline-secondary btn-sm" href="{% url 'dashboard' %}#requests">Refresh</a>
+        </div>
 
         {% if bookings %}
             <div class="list-group">
@@ -214,7 +366,7 @@
                                     Reject
                                 </a>
                             {% elif booking.status == 'approved' %}
-                                <span class="badge bg-success">Approved</span>
+                                <span class="badge bg-success">Confirmed</span>
                             {% else %}
                                 <span class="badge bg-danger">Rejected</span>
                             {% endif %}
@@ -227,7 +379,13 @@
                 {% endfor %}
             </div>
         {% else %}
-            <p class="text-muted">No booking requests yet.</p>
+            <div class="card p-4 text-center" style="background: var(--gray-50);">
+                <div class="mb-3" aria-hidden="true" style="font-size: 3rem; color: var(--gray-400);">
+                    <i class="fas fa-inbox"></i>
+                </div>
+                <h4 class="mb-2">No requests</h4>
+                <p class="text-muted mb-0">When tenants request bookings, they’ll show up here.</p>
+            </div>
         {% endif %}
     </div>
 
@@ -235,8 +393,8 @@
 
     <!-- ================= ADMIN DASHBOARD ================= -->
     {% if is_admin %}
-    <div class="card p-4">
-        <h4>Admin Panel</h4>
+    <div class="card p-3 p-md-4">
+        <h4>Admin</h4>
         <p class="text-muted">Manage users and verify property listings.</p>
 
         <a href="/admin/" target="_blank" class="btn btn-outline-primary">

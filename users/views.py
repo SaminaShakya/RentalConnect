@@ -4,6 +4,10 @@ from django.contrib.auth.decorators import login_required
 
 from .models import Profile, Notification
 from .forms import ProfileForm, SimpleRegisterForm
+from django.db.models import Exists, OuterRef
+from django.utils import timezone
+from listings.models import Booking, Property, PropertyVerificationRequest, EarlyExitRequest
+from listings.utils import haversine
 
 
 # =========================
@@ -51,9 +55,81 @@ def register(request):
 # =========================
 @login_required
 def dashboard(request):
-    # Unified experience: dashboard is embedded on Home.
-    # Keep this URL for compatibility, but redirect to Home dashboard section.
-    return redirect('home')
+    bookings = None
+    properties = None
+    landlord_bookings = None
+    stats = {}
+
+    if request.user.is_tenant:
+        bookings = Booking.objects.filter(
+            tenant=request.user
+        ).select_related('property', 'property__landlord').order_by('-created_at')
+
+        # Add distance calculation if user location is available
+        user_lat = request.session.get('user_lat')
+        user_lng = request.session.get('user_lng')
+        
+        if user_lat and user_lng:
+            for booking in bookings:
+                if booking.property.latitude and booking.property.longitude:
+                    booking.distance = haversine(
+                        (float(user_lat), float(user_lng)),
+                        (booking.property.latitude, booking.property.longitude)
+                    )
+
+        exit_requests = EarlyExitRequest.objects.filter(booking__tenant=request.user)
+        stats = {
+            'total_bookings': bookings.count(),
+            'pending_bookings': bookings.filter(status='pending').count(),
+            'approved_bookings': bookings.filter(status='approved').count(),
+            'rejected_bookings': bookings.filter(status='rejected').count(),
+            'active_bookings': bookings.filter(status__in=['approved', 'rented_out']).count(),
+            'exit_requests': exit_requests.count(),
+        }
+
+    if request.user.is_landlord:
+        properties = Property.objects.filter(
+            landlord=request.user
+        ).annotate(
+            has_pending_verification=Exists(
+                PropertyVerificationRequest.objects.filter(
+                    property=OuterRef('pk'),
+                    status='pending',
+                )
+            )
+        ).order_by('-created_at')
+
+        landlord_bookings = Booking.objects.filter(
+            property__landlord=request.user
+        ).select_related('property', 'tenant').order_by('-created_at')
+
+        landlord_exits = EarlyExitRequest.objects.filter(booking__property__landlord=request.user)
+        stats = {
+            'total_properties': properties.count(),
+            'verified_properties': properties.filter(is_verified=True).count(),
+            'unverified_properties': properties.filter(is_verified=False).count(),
+            'pending_booking_requests': landlord_bookings.filter(status='pending').count(),
+            'active_tenants': landlord_bookings.filter(status='rented_out').count(),
+            'exit_requests': landlord_exits.count(),
+        }
+
+    return render(request, 'users/dashboard.html', {
+        'is_admin': request.user.is_superuser,
+        'is_tenant': request.user.is_tenant,
+        'is_landlord': request.user.is_landlord,
+        'bookings': bookings if bookings is not None else [],
+        'properties': properties if properties is not None else [],
+        'landlord_bookings': landlord_bookings if landlord_bookings is not None else [],
+        'early_exits': EarlyExitRequest.objects.filter(booking__tenant=request.user).select_related('booking', 'booking__property').order_by('-request_date') if request.user.is_tenant else [],
+        'stats': stats,
+        'today': timezone.now().date(),
+    })
+
+
+@login_required
+def wishlist(request):
+    # Placeholder UI until SavedProperty model is added.
+    return render(request, 'users/wishlist.html')
 
 # =========================
 # PROFILE UPDATE

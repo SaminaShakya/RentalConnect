@@ -195,6 +195,10 @@ class PropertyAppointment(models.Model):
 # ----------------------------------
 
 class EarlyExitRequest(models.Model):
+    """
+    Represents a tenant's request to terminate their lease early.
+    Handles the full workflow from request to settlement and lease termination.
+    """
     STATUS_CHOICES = (
         ('requested', 'Requested'),
         ('owner_approved', 'Owner Approved'),
@@ -222,17 +226,22 @@ class EarlyExitRequest(models.Model):
         return f"EarlyExit(Booking #{self.booking.id}) {self.status}"
 
     def calculate_notice(self):
+        """
+        Calculate the number of days notice given based on desired move-out date.
+        If the move-out date is in the past or today, notice_given_days is 0.
+        """
         if self.booking and self.desired_move_out:
-            self.notice_given_days = (self.desired_move_out - date.today()).days
+            from datetime import date
+            days = (self.desired_move_out - date.today()).days
+            self.notice_given_days = max(0, days)  # Ensure non-negative
 
     def calculate_penalty(self):
-        # new business rule: tenant forfeits half of the security deposit as penalty,
-        # plus any damage fee assessed later during inspection.  The damage amount
-        # itself is stored in `deductions` and handled during settlement.
+        """
+        Calculate penalty as half of the security deposit.
+        Damage deductions are handled separately during settlement.
+        """
         from decimal import Decimal
         deposit = self.booking.security_deposit or Decimal(0)
-        # simply take half the deposit regardless of dates; future enhancement
-        # could prorate based on time lived (not implemented here yet).
         self.penalty_amount = deposit / Decimal(2)
         if self.penalty_amount < 0:
             self.penalty_amount = Decimal(0)
@@ -265,6 +274,10 @@ class InspectionImage(models.Model):
         return f"Photo for {self.report}"
 
 class Settlement(models.Model):
+    """
+    Represents the financial settlement for an early exit request.
+    Calculates amounts due, credits, and handles payment verification.
+    """
     exit_request = models.OneToOneField(EarlyExitRequest, on_delete=models.CASCADE, related_name='settlement')
     lease = models.ForeignKey(Booking, on_delete=models.CASCADE)
     total_due = models.DecimalField(max_digits=12, decimal_places=2, default=0)
@@ -292,18 +305,23 @@ class Settlement(models.Model):
     payment_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     payment_completed_at = models.DateTimeField(blank=True, null=True)
 
+    # Manual payment verification (BCA-friendly, no gateway required)
+    tenant_payment_reference = models.CharField(max_length=120, blank=True, help_text="UPI/bank reference (optional).")
+    tenant_payment_proof = models.FileField(upload_to='settlement_proofs/', blank=True, null=True)
+    tenant_payment_submitted_at = models.DateTimeField(blank=True, null=True)
+    owner_receipt_confirmed_at = models.DateTimeField(blank=True, null=True)
+    owner_receipt_note = models.TextField(blank=True)
+
     def calculate(self):
-        # compute settlement according to simplified deposit rule:
-        # - penalty = half of the security deposit plus any damage deductions
-        # - tenant keeps whatever remains of the deposit after penalty & damages
+        """
+        Calculate settlement amounts based on security deposit, penalty, and deductions.
+        """
         from decimal import Decimal
         deposit = self.exit_request.booking.security_deposit or Decimal(0)
         half_dep = deposit / Decimal(2)
         damage = self.exit_request.deductions or Decimal(0)
         self.total_due = half_dep + damage
-        # amount of deposit remaining for tenant
         self.total_credit = deposit - self.total_due
-        # net fields for ease of display; deposit covers the due amount in most cases
         self.net_refund_to_tenant = max(self.total_credit, Decimal(0))
         self.net_payable_to_owner = max(self.total_due - deposit, Decimal(0))
 

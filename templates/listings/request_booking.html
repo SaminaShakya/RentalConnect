@@ -1,25 +1,28 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="container mt-5">
+<div class="container my-4">
     <div class="row justify-content-center">
 
         <div class="col-md-6">
 
-            <div class="card shadow-sm p-4">
+            <div class="card p-3 p-md-4">
 
-                <h3 class="mb-2">Request Booking</h3>
-                <p class="text-muted mb-4">
-                    Please select your desired stay period.
-                </p>
+                <h3 class="mb-1">Request booking</h3>
+                <p class="text-muted mb-4">Choose dates. The owner will approve or reject.</p>
 
                 <!-- PROPERTY SUMMARY -->
-                <div class="border rounded p-3 mb-4 bg-light">
-                    <strong>{{ property.title }}</strong><br>
-                    {{ property.city }}<br>
-                    <span class="fw-semibold">
-                        Rs. {{ property.rent }} / month
-                    </span>
+                <div class="card p-3 mb-4" style="background: var(--gray-50);">
+                    <div class="d-flex justify-content-between align-items-start gap-2">
+                        <div>
+                            <strong>{{ property.title }}</strong>
+                            <div class="text-muted small"><i class="fas fa-map-marker-alt"></i> {{ property.city }}</div>
+                        </div>
+                        <div class="text-end">
+                            <div class="fw-bold" style="color: var(--primary-600);">Rs. {{ property.rent|floatformat:0 }}</div>
+                            <div class="text-muted small">per month</div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- BOOKING FORM -->
@@ -58,7 +61,7 @@
 
                     <button type="submit"
                             class="btn btn-primary w-100">
-                        Submit Booking Request
+                        Submit request
                     </button>
                 </form>
 
@@ -71,26 +74,16 @@
                 <hr class="my-4">
 
                 <!-- CONTACT LANDLORD SECTION -->
-                <div class="bg-light p-3 rounded">
-                    <p class="text-muted mb-2"><small><strong>Questions?</strong></small></p>
-                    <p class="text-muted mb-3">
-                        After submitting your booking request, you'll be able to message the landlord directly to discuss details and answer any questions.
-                    </p>
-                    <p class="text-muted mb-0"><small>
-                        <i class="fas fa-envelope"></i> Contact: {{ property.landlord.email }}
-                    </small></p>
+                <div class="card p-3" style="background: var(--gray-50);">
+                    <div class="fw-bold mb-1">Need to ask something first?</div>
+                    <div class="text-muted small mb-2">Submit the request, then use the Inbox to message the owner.</div>
+                    <div class="text-muted small"><i class="fas fa-envelope"></i> {{ property.landlord.email }}</div>
                 </div>
 
             </div>
 
-            <!-- ALGORITHM EXPLANATION (FOR VIVA) -->
-            <div class="alert alert-info mt-4">
-                <strong>How booking works:</strong>
-                <ul class="mb-0">
-                    <li>Your request is checked against existing approved bookings</li>
-                    <li>Overlapping dates are automatically rejected</li>
-                    <li>Owner manually approves or rejects valid requests</li>
-                </ul>
+            <div class="alert alert-info mt-3">
+                <strong>Note:</strong> Overlapping requests are blocked to prevent double booking.
             </div>
 
         </div>

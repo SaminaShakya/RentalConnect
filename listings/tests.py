@@ -157,6 +157,30 @@ class EarlyExitTests(TestCase):
         InspectionImage.objects.create(report=insp, image=img)
         self.assertEqual(insp.images.count(), 1)
 
+    def test_status_transitions(self):
+        # Test status changes from requested to approved
+        desired = timezone.now().date() + timedelta(days=60)
+        exit_req = EarlyExitRequest.objects.create(
+            booking=self.booking,
+            desired_move_out=desired,
+        )
+        self.assertEqual(exit_req.status, 'requested')
+        exit_req.status = 'owner_approved'
+        exit_req.save()
+        self.assertEqual(exit_req.status, 'owner_approved')
+
+    def test_settlement_status_transitions(self):
+        desired = timezone.now().date() + timedelta(days=60)
+        exit_req = EarlyExitRequest.objects.create(
+            booking=self.booking,
+            desired_move_out=desired,
+        )
+        sett = Settlement.objects.create(exit_request=exit_req, lease=self.booking)
+        self.assertEqual(sett.status, 'draft')
+        sett.status = 'tenant_accepted'
+        sett.save()
+        self.assertEqual(sett.status, 'tenant_accepted')
+
 
 class LocationSearchTests(TestCase):
     def setUp(self):

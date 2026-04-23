@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="container mt-5 property-list-container">
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-end gap-3 mb-4">
+<div class="container my-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-end gap-3 mb-3">
         <div>
-            <h2 class="section-title mb-1">Browse Properties</h2>
-            <p class="text-muted mb-0">Find verified rental properties that match your needs.</p>
+            <h2 class="section-title mb-1">Properties</h2>
+            <p class="text-muted mb-0">Search verified listings and request a booking.</p>
         </div>
 
         <div class="d-flex align-items-center gap-2">
@@ -14,6 +14,8 @@
                 <input type="hidden" name="q" value="{{ search_query }}">
                 <input type="hidden" name="city" value="{{ city_filter }}">
                 <input type="hidden" name="max_rent" value="{{ max_rent_filter }}">
+                <input type="hidden" name="lat" value="{{ request.GET.lat }}">
+                <input type="hidden" name="lng" value="{{ request.GET.lng }}">
                 <select name="sort" class="form-select" onchange="this.form.submit()">
                     <option value="newest" {% if sort == 'newest' %}selected{% endif %}>Newest</option>
                     <option value="rent_low" {% if sort == 'rent_low' %}selected{% endif %}>Rent: Low to High</option>
@@ -23,133 +25,200 @@
         </div>
     </div>
 
-    <div class="filters-section">
-        <form method="get" class="filters-grid">
-            <div class="filter-group">
-                <label>Search</label>
-                <input type="text" name="q" value="{{ search_query }}" class="form-control" placeholder="Title, city, address...">
-            </div>
-            <div class="filter-group">
-                <label>City</label>
-                <input type="text" name="city" value="{{ city_filter }}" class="form-control" placeholder="e.g. Kathmandu">
-            </div>
-            <div class="filter-group">
-                <label>Max Rent</label>
-                <input type="number" name="max_rent" value="{{ max_rent_filter }}" class="form-control" placeholder="e.g. 20000">
-            </div>
-            <div class="filter-group">
-                <label>Latitude</label>
-                <input type="text" name="lat" value="{{ request.GET.lat }}" class="form-control" placeholder="e.g. 27.7172">
-            </div>
-            <div class="filter-group">
-                <label>Longitude</label>
-                <input type="text" name="lng" value="{{ request.GET.lng }}" class="form-control" placeholder="e.g. 85.3240">
-            </div>
-            <div class="filter-group">
-                <label>Sort</label>
-                <select name="sort" class="form-select">
-                    <option value="newest" {% if sort == 'newest' %}selected{% endif %}>Newest</option>
-                    <option value="rent_low" {% if sort == 'rent_low' %}selected{% endif %}>Rent: Low to High</option>
-                    <option value="rent_high" {% if sort == 'rent_high' %}selected{% endif %}>Rent: High to Low</option>
-                </select>
-            </div>
-            <div class="filter-group">
-                <label>&nbsp;</label>
-                <button class="btn btn-primary">
-                    <i class="fas fa-filter me-2"></i>Apply Filters
-                </button>
-            </div>
-        </form>
-    </div>
-
-    {% if page_obj %}
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <div class="text-muted small">
-                Showing {{ page_obj|length }} of {{ page_obj.paginator.count }} results
-            </div>
-            <a class="btn btn-outline-secondary btn-sm" href="{% url 'property_list' %}">
-                Clear filters
-            </a>
-        </div>
-
-        <div class="property-grid">
-            {% for property in page_obj %}
-            <div class="property-card">
-                <div class="property-carousel-image">
-                    {% if property.images.all %}
-                        <!-- Show first image from PropertyImage -->
-                        <img src="{{ property.images.first.image.url }}" alt="{{ property.title }}">
-                        <!-- Image counter badge (only show if multiple images) -->
-                        {% if property.images.all|length > 1 %}
-                            <div style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.6); color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem;">
-                                📷 {{ property.images.all|length }}
-                            </div>
-                        {% endif %}
-                    {% elif property.image %}
-                        <!-- Fallback to legacy property.image -->
-                        <img src="{{ property.image.url }}" alt="{{ property.title }}">
-                    {% else %}
-                        <div class="property-placeholder">
-                            <i class="fas fa-home"></i>
-                            <p>No image</p>
-                        </div>
-                    {% endif %}
+    <div class="row g-4">
+        <!-- Filters -->
+        <aside class="col-lg-3">
+            <div class="card p-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h5 class="mb-0">Filters</h5>
+                    <a class="small text-decoration-none" href="{% url 'property_list' %}">Reset</a>
                 </div>
 
-                <div class="property-carousel-body">
-                    <h6 class="mb-1">{{ property.title }}</h6>
-                    <p class="text-muted small mb-2">
-                        <i class="fas fa-map-marker-alt"></i> {{ property.city }}
-                    </p>
-
-                    <p class="price-small mb-2">Rs. {{ property.rent|floatformat:0 }}/mo</p>
-
-                    <div class="property-features-small">
-                        <span class="feature-badge-small"><i class="fas fa-bed"></i> {{ property.bedrooms }}</span>
-                        <span class="feature-badge-small"><i class="fas fa-bath"></i> {{ property.bathrooms }}</span>
+                <form id="filtersForm" method="get" class="d-grid gap-3">
+                    <div>
+                        <label class="form-label">Search</label>
+                        <input type="text" name="q" value="{{ search_query }}" class="form-control" placeholder="Title, city, address">
                     </div>
 
-                    <a href="{% url 'property_detail' property.id %}" class="btn btn-primary btn-sm w-100">
-                        <i class="fas fa-eye"></i> View Details
-                    </a>
-                </div>
+                    <div>
+                        <label class="form-label">City</label>
+                        <input type="text" name="city" value="{{ city_filter }}" class="form-control" placeholder="e.g., Kathmandu">
+                    </div>
+
+                    <div>
+                        <label class="form-label">Max rent (monthly)</label>
+                        <input type="number" name="max_rent" value="{{ max_rent_filter }}" class="form-control" placeholder="e.g., 20000">
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <label class="form-label mb-0">Near me</label>
+                            <button id="useLocationBtn" class="btn btn-outline-secondary btn-sm" type="button">
+                                Use my location
+                            </button>
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <input id="latInput" type="text" name="lat" value="{{ request.GET.lat }}" class="form-control" placeholder="Lat">
+                            </div>
+                            <div class="col-6">
+                                <input id="lngInput" type="text" name="lng" value="{{ request.GET.lng }}" class="form-control" placeholder="Lng">
+                            </div>
+                        </div>
+                        <small class="text-muted">If set, results are ordered by distance.</small>
+                    </div>
+
+                    <div>
+                        <label class="form-label">Sort</label>
+                        <select name="sort" class="form-select">
+                            <option value="newest" {% if sort == 'newest' %}selected{% endif %}>Newest</option>
+                            <option value="rent_low" {% if sort == 'rent_low' %}selected{% endif %}>Rent: Low to High</option>
+                            <option value="rent_high" {% if sort == 'rent_high' %}selected{% endif %}>Rent: High to Low</option>
+                        </select>
+                    </div>
+
+                    <button class="btn btn-primary" type="submit">
+                        <i class="fas fa-filter"></i>
+                        Apply
+                    </button>
+                </form>
             </div>
-            {% endfor %}
-        </div>
+        </aside>
 
-        {% if page_obj.has_other_pages %}
-        <nav aria-label="Property list pagination" class="mt-4">
-            <ul class="pagination justify-content-center">
-                {% if page_obj.has_previous %}
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}&q={{ search_query|urlencode }}&city={{ city_filter|urlencode }}&max_rent={{ max_rent_filter|urlencode }}&sort={{ sort|urlencode }}&lat={{ request.GET.lat|urlencode }}&lng={{ request.GET.lng|urlencode }}">Previous</a>
-                </li>
+        <!-- Results -->
+        <section class="col-lg-9">
+            {% if page_obj %}
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="text-muted small">
+                        {{ page_obj.paginator.count }} results
+                        {% if request.GET.lat and request.GET.lng %}
+                            <span class="ms-2 badge badge-primary"><i class="fas fa-location-arrow"></i> Distance</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    {% for property in page_obj %}
+                    <div class="col-md-6 col-xl-4">
+                        <div class="property-card">
+                            <div class="card-media">
+                                {% if property.distance_km %}
+                                    <span class="badge-distance">
+                                        <i class="fas fa-location-arrow"></i>
+                                        {{ property.distance_km|floatformat:1 }} km
+                                    </span>
+                                {% endif %}
+
+                                <button class="icon-btn icon-btn-top-right" type="button" aria-label="Save property" title="Save (coming soon)" disabled>
+                                    <i class="far fa-heart"></i>
+                                </button>
+
+                                {% if property.images.all %}
+                                    <img src="{{ property.images.first.image.url }}" alt="{{ property.title }}">
+                                {% elif property.image %}
+                                    <img src="{{ property.image.url }}" alt="{{ property.title }}">
+                                {% else %}
+                                    <div class="property-placeholder">
+                                        <i class="fas fa-home"></i>
+                                        <p>No image</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="card-body">
+                                <h5 class="mb-1">{{ property.title }}</h5>
+                                <div class="text-muted text-truncate mb-2">
+                                    <i class="fas fa-map-marker-alt"></i> {{ property.city }}
+                                </div>
+
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div class="price mb-0">Rs. {{ property.rent|floatformat:0 }}/mo</div>
+                                </div>
+
+                                <div class="property-features-small mb-3">
+                                    <span class="feature-badge-small"><i class="fas fa-bed"></i> {{ property.bedrooms }}</span>
+                                    <span class="feature-badge-small"><i class="fas fa-bath"></i> {{ property.bathrooms }}</span>
+                                </div>
+
+                                <a href="{% url 'property_detail' property.id %}" class="btn btn-primary">
+                                    View details
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                {% if page_obj.has_other_pages %}
+                <nav aria-label="Property list pagination" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}&q={{ search_query|urlencode }}&city={{ city_filter|urlencode }}&max_rent={{ max_rent_filter|urlencode }}&sort={{ sort|urlencode }}&lat={{ request.GET.lat|urlencode }}&lng={{ request.GET.lng|urlencode }}">Previous</a>
+                        </li>
+                        {% endif %}
+
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}&q={{ search_query|urlencode }}&city={{ city_filter|urlencode }}&max_rent={{ max_rent_filter|urlencode }}&sort={{ sort|urlencode }}&lat={{ request.GET.lat|urlencode }}&lng={{ request.GET.lng|urlencode }}">{{ num }}</a>
+                            </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}&q={{ search_query|urlencode }}&city={{ city_filter|urlencode }}&max_rent={{ max_rent_filter|urlencode }}&sort={{ sort|urlencode }}&lat={{ request.GET.lat|urlencode }}&lng={{ request.GET.lng|urlencode }}">Next</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
                 {% endif %}
-
-                {% for num in page_obj.paginator.page_range %}
-                    {% if page_obj.number == num %}
-                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
-                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ num }}&q={{ search_query|urlencode }}&city={{ city_filter|urlencode }}&max_rent={{ max_rent_filter|urlencode }}&sort={{ sort|urlencode }}&lat={{ request.GET.lat|urlencode }}&lng={{ request.GET.lng|urlencode }}">{{ num }}</a>
-                    </li>
-                    {% endif %}
-                {% endfor %}
-
-                {% if page_obj.has_next %}
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.next_page_number }}&q={{ search_query|urlencode }}&city={{ city_filter|urlencode }}&max_rent={{ max_rent_filter|urlencode }}&sort={{ sort|urlencode }}&lat={{ request.GET.lat|urlencode }}&lng={{ request.GET.lng|urlencode }}">Next</a>
-                </li>
-                {% endif %}
-            </ul>
-        </nav>
-        {% endif %}
-    {% else %}
-        <div class="text-center py-5">
-            <i class="fas fa-search" style="font-size: 4rem; color: var(--gray-400);"></i>
-            <p class="text-muted mt-3">No properties match your filters.</p>
-        </div>
-    {% endif %}
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-search" style="font-size: 4rem; color: var(--gray-400);"></i>
+                    <p class="text-muted mt-3">No properties match your filters.</p>
+                </div>
+            {% endif %}
+        </section>
+    </div>
 </div>
+
+<script>
+  (function () {
+    const btn = document.getElementById('useLocationBtn');
+    const lat = document.getElementById('latInput');
+    const lng = document.getElementById('lngInput');
+    const form = document.getElementById('filtersForm');
+
+    if (!btn || !lat || !lng || !form) return;
+
+    btn.addEventListener('click', function () {
+      if (!navigator.geolocation) {
+        alert('Location is not supported in this browser.');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Getting location...';
+
+      navigator.geolocation.getCurrentPosition(
+        function (pos) {
+          lat.value = pos.coords.latitude.toFixed(6);
+          lng.value = pos.coords.longitude.toFixed(6);
+          form.submit();
+        },
+        function () {
+          btn.disabled = false;
+          btn.textContent = 'Use my location';
+          alert('Could not get your location. You can enter coordinates manually.');
+        },
+        { enableHighAccuracy: true, timeout: 8000 }
+      );
+    });
+  })();
+</script>
 
 {% endblock %}

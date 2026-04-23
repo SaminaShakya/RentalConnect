@@ -5,8 +5,20 @@
     <p><strong>Booking:</strong> {{ exit.booking.property.title }} ({{ exit.booking.start_date }} to {{ exit.booking.end_date }})</p>
     <p><strong>Status:</strong> {{ exit.get_status_display }}</p>
     <p><strong>Desired move-out:</strong> {{ exit.desired_move_out }}</p>
+    {% if exit.notice_given_days %}
+        <p><strong>Notice given:</strong> {{ exit.notice_given_days }} days</p>
+    {% endif %}
     {% if exit.owner_comments %}
         <p><strong>Owner comments:</strong> {{ exit.owner_comments }}</p>
+    {% endif %}
+    {% if exit.penalty_amount %}
+        <p><strong>Penalty amount:</strong> Rs. {{ exit.penalty_amount }}</p>
+    {% endif %}
+    {% if exit.deductions %}
+        <p><strong>Deductions:</strong> Rs. {{ exit.deductions }}</p>
+    {% endif %}
+    {% if exit.refund_amount %}
+        <p><strong>Refund amount:</strong> Rs. {{ exit.refund_amount }}</p>
     {% endif %}
     {% if exit.inspection and exit.inspection.status == 'completed' %}
         <hr>
@@ -39,9 +51,7 @@
         <a href="{% url 'schedule_inspection' exit.id %}" class="btn btn-outline-primary">Schedule Inspection</a>
     {% endif %}
 
-    {% if exit.status == 'inspection_scheduled' and user == exit.booking.tenant %}
-        <a href="{% url 'submit_inspection_report' exit.id %}" class="btn btn-outline-warning">Submit Inspection Report</a>
-    {% elif exit.status == 'inspection_scheduled' and user == exit.booking.property.landlord %}
+    {% if exit.status == 'inspection_scheduled' and user == exit.booking.property.landlord %}
         <a href="{% url 'submit_inspection_report' exit.id %}" class="btn btn-outline-warning">Submit Inspection Report</a>
     {% endif %}
 

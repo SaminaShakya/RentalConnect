@@ -415,26 +415,72 @@ def view_settlement(request, exit_id):
         return redirect('home')
 
     if request.method == 'POST':
+        # Manual payment: tenant uploads proof (after settlement completed)
+        if request.POST.get('intent') == 'upload_proof':
+            if request.user != ex.booking.tenant:
+                return redirect('view_settlement', exit_id)
+            proof = request.FILES.get('tenant_payment_proof')
+            ref = (request.POST.get('tenant_payment_reference') or '').strip()
+            if not proof:
+                form = SettlementActionForm()
+                form.add_error(None, 'Please upload proof of payment.')
+                return render(request, 'listings/settlement.html', {'settlement': settlement, 'exit': ex, 'form': form})
+            settlement.tenant_payment_proof = proof
+            settlement.tenant_payment_reference = ref
+            settlement.tenant_payment_submitted_at = timezone.now()
+            settlement.payment_status = 'processing'
+            settlement.save()
+            Notification.objects.create(
+                recipient=ex.booking.property.landlord,
+                actor=request.user,
+                title='Payment proof submitted',
+                message=f"Payment proof submitted for settlement on exit #{ex.id}.",
+                target_url=f"/listings/exit/{ex.id}/settlement/",
+            )
+            return redirect('view_settlement', exit_id)
+
+        # Manual payment: owner confirms receipt
+        if request.POST.get('intent') == 'confirm_receipt':
+            if request.user != ex.booking.property.landlord:
+                return redirect('view_settlement', exit_id)
+            note = (request.POST.get('owner_receipt_note') or '').strip()
+            settlement.owner_receipt_note = note
+            settlement.owner_receipt_confirmed_at = timezone.now()
+            settlement.payment_status = 'completed'
+            settlement.payment_completed_at = timezone.now()
+            settlement.save()
+            Notification.objects.create(
+                recipient=ex.booking.tenant,
+                actor=request.user,
+                title='Payment confirmed',
+                message=f"Owner confirmed receipt for settlement on exit #{ex.id}.",
+                target_url=f"/listings/exit/{ex.id}/settlement/",
+            )
+            return redirect('view_settlement', exit_id)
+
+        # Settlement accept/dispute
         form = SettlementActionForm(request.POST)
         if form.is_valid():
             action = form.cleaned_data['action']
             comments = form.cleaned_data['comments']
             if action == 'accept':
                 if request.user == ex.booking.tenant:
-                    settlement.status = 'tenant_accepted'
+                    # If owner already accepted, complete
+                    settlement.status = 'completed' if settlement.status == 'owner_accepted' else 'tenant_accepted'
                 elif request.user == ex.booking.property.landlord:
-                    settlement.status = 'owner_accepted'
+                    settlement.status = 'completed' if settlement.status == 'tenant_accepted' else 'owner_accepted'
                 else:
-                    form.add_error(None, 'Only the tenant or landlord may accept the settlement.')
+                    form.add_error(None, 'Only the tenant or owner may accept the settlement.')
                     return render(request, 'listings/settlement.html', {'settlement': settlement, 'exit': ex, 'form': form})
                 settlement.save()
             else:
                 settlement.status = 'disputed'
                 settlement.notes = (settlement.notes or '') + f"\n{request.user.username}: {comments}"
                 settlement.save()
-            return redirect('early_exit_detail', exit_id)
+            return redirect('view_settlement', exit_id)
     else:
         form = SettlementActionForm()
+
     return render(request, 'listings/settlement.html', {'settlement': settlement, 'exit': ex, 'form': form})
 
 
@@ -442,7 +488,7 @@ def view_settlement(request, exit_id):
 # POPULARITY ALGORITHM
 # =========================
 def get_popular_properties(limit=6):
-    """
+    """ 
     Popularity algorithm that ranks properties based on:
     - Recent bookings (40% weight)
     - Recent creation (30% weight) 
@@ -550,6 +596,22 @@ def property_list(request):
     paginator = Paginator(properties, 10)  # 10 properties per page
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
+
+    # Attach distance for UI (optional badge) when lat/lng provided.
+    # This keeps templates simple and avoids DB-specific math in SQLite.
+    if lat and lng:
+        try:
+            lat_f = float(lat)
+            lng_f = float(lng)
+            from .utils import haversine
+            for p in page_obj.object_list:
+                if p.latitude is not None and p.longitude is not None:
+                    p.distance_km = haversine((lat_f, lng_f), (p.latitude, p.longitude))
+                else:
+                    p.distance_km = None
+        except ValueError:
+            for p in page_obj.object_list:
+                p.distance_km = None
 
     return render(request, 'listings/property_list.html', {
         'page_obj': page_obj,
@@ -668,105 +730,160 @@ def get_property_recommendations(target_property, limit=4):
 # =========================
 def fuzzy_search_properties(query, max_results=20):
     """
-    Fuzzy search algorithm for property search.
-    Uses multiple strategies:
-    1. Exact matches first
-    2. Contains matches
-    3. Similar sounding words (basic phonetic matching)
+    Improved fuzzy search algorithm for property search.
+    Uses ranked strategies:
+    1. Exact city matches (highest score)
+    2. City starts with query
+    3. City contains query
+    4. Title/Description contains query (lower priority)
+    5. Phonetic similarity for city names
     """
     if not query or len(query.strip()) < 2:
         return Property.objects.filter(is_verified=True)[:max_results]
 
     query = query.strip().lower()
-    results = []
+    scored_results = {}  # {property_id: score}
 
-    # Strategy 1: Exact city matches
+    # Strategy 1: Exact city match (score: 100) - highest priority
     exact_city = Property.objects.filter(
         city__iexact=query,
         is_verified=True
     )
-    results.extend(exact_city)
+    for prop in exact_city:
+        scored_results[prop.id] = 100
 
-    # Strategy 2: City contains query
+    # Strategy 2: City starts with query (score: 80)
+    city_startswith = Property.objects.filter(
+        city__istartswith=query,
+        is_verified=True
+    ).exclude(id__in=scored_results.keys())
+    for prop in city_startswith:
+        scored_results[prop.id] = 80
+
+    # Strategy 3: City contains query (score: 60)
     city_contains = Property.objects.filter(
         city__icontains=query,
         is_verified=True
-    ).exclude(id__in=[p.id for p in results])
-    results.extend(city_contains)
+    ).exclude(id__in=scored_results.keys())
+    for prop in city_contains:
+        scored_results[prop.id] = 60
 
-    # Strategy 3: Title contains query
+    # Strategy 4: Title contains query (score: 40)
     title_contains = Property.objects.filter(
         title__icontains=query,
         is_verified=True
-    ).exclude(id__in=[p.id for p in results])
-    results.extend(title_contains)
+    ).exclude(id__in=scored_results.keys())
+    for prop in title_contains:
+        scored_results[prop.id] = 40
 
-    # Strategy 4: Description contains query
+    # Strategy 5: Description contains query (score: 30)
     desc_contains = Property.objects.filter(
         description__icontains=query,
         is_verified=True
-    ).exclude(id__in=[p.id for p in results])
-    results.extend(desc_contains)
+    ).exclude(id__in=scored_results.keys())
+    for prop in desc_contains:
+        scored_results[prop.id] = 30
 
-    # Strategy 5: Address contains query
+    # Strategy 6: Address contains query (score: 25)
     address_contains = Property.objects.filter(
         address__icontains=query,
         is_verified=True
-    ).exclude(id__in=[p.id for p in results])
-    results.extend(address_contains)
+    ).exclude(id__in=scored_results.keys())
+    for prop in address_contains:
+        scored_results[prop.id] = 25
 
-    # Strategy 6: Basic phonetic similarity for city names
-    phonetic_matches = get_phonetic_matches(query, max_results - len(results))
-    for prop in phonetic_matches:
-        if prop not in results:
-            results.append(prop)
+    # Strategy 7: Phonetic similarity (score: 50)
+    if len(scored_results) < max_results:
+        phonetic_limit = max_results - len(scored_results)
+        phonetic_matches = get_phonetic_matches(query, phonetic_limit)
+        for prop in phonetic_matches:
+            if prop.id not in scored_results:
+                scored_results[prop.id] = 50
 
-    return results[:max_results]
+    # Sort by score (descending) and get property objects
+    sorted_ids = sorted(scored_results.items(), key=lambda x: x[1], reverse=True)
+    sorted_ids = [pid for pid, score in sorted_ids]
+    
+    # Fetch sorted properties maintaining order
+    if sorted_ids:
+        properties = Property.objects.filter(id__in=sorted_ids[:max_results])
+        # Reorder results by sorted_ids
+        id_to_prop = {p.id: p for p in properties}
+        results = [id_to_prop[pid] for pid in sorted_ids[:max_results] if pid in id_to_prop]
+        return results
+    
+    return []
 
 
 def get_phonetic_matches(query, limit=5):
     """
-    Basic phonetic matching for city names.
-    Simplified Soundex-like algorithm.
+    Phonetic matching for city names using proper Soundex algorithm.
+    More efficient: only checks cities that haven't been matched yet.
     """
     def get_soundex_code(word):
-        """Generate a simple Soundex-like code"""
+        """Generate proper Soundex code (4 chars: 1 letter + 3 digits)"""
+        if not word or len(word) == 0:
+            return "0000"
+
+        word = word.upper().strip()
         if not word:
-            return ""
+            return "0000"
+        
+        # Keep first letter
+        first = word[0]
+        code = first
 
-        # Convert to uppercase and keep first letter
-        word = word.upper()
-        code = word[0]
-
-        # Mapping for similar sounds
+        # Soundex mapping (standard)
         mapping = {
             'BFPV': '1', 'CGJKQSXZ': '2', 'DT': '3',
             'L': '4', 'MN': '5', 'R': '6'
+            # Vowels (AEIOUHWY) are ignored (not added to code)
         }
 
-        # Convert remaining letters
+        prev_digit = None
+        # Process letters after first
         for char in word[1:]:
+            if len(code) >= 4:
+                break
+            
+            # Skip vowels and ignored characters
+            if char in 'AEIOUHWY':
+                prev_digit = None
+                continue
+            
+            # Find soundex digit for this character
+            digit = None
             for key, value in mapping.items():
                 if char in key:
-                    if not code.endswith(value):  # Avoid duplicates
-                        code += value
+                    digit = value
                     break
-            else:
-                # Keep vowels and other chars as-is, but limit length
-                if len(code) < 4:
-                    code += char
+            
+            # Add digit if found and different from previous
+            if digit and digit != prev_digit:
+                code += digit
+                prev_digit = digit
 
-        # Pad or truncate to 4 characters
+        # Pad with zeros to 4 characters
         return (code + '000')[:4]
 
     query_code = get_soundex_code(query)
-
-    # Find properties with similar sounding city names
+    
+    # Get distinct cities using Python (SQLite doesn't support DISTINCT ON)
+    unique_cities = set()
+    for prop in Property.objects.filter(is_verified=True).values_list('city', flat=True):
+        unique_cities.add(prop.lower())
+    
+    # Find cities with matching Soundex code
     similar_cities = []
-    for prop in Property.objects.filter(is_verified=True):
-        city_code = get_soundex_code(prop.city)
+    for city in unique_cities:
+        city_code = get_soundex_code(city)
         if city_code == query_code:
-            similar_cities.append(prop)
+            # Fetch all properties with this city
+            similar_cities.extend(
+                Property.objects.filter(city__iexact=city, is_verified=True)
+            )
+            if len(similar_cities) >= limit:
+                break
 
     return similar_cities[:limit]
 
@@ -1259,7 +1376,7 @@ def cancel_booking(request, booking_id):
             actor=request.user,
             title=f"Booking Cancelled for {booking.property.title}",
             message=f"Tenant {request.user.username} cancelled their booking ({booking.start_date} → {booking.end_date}). Reason: {cancellation_reason[:100]}",
-            target_url=f"/listings/booking/{booking_id}/detail/",
+            target_url=f"/booking/{booking.id}/detail/",
         )
         
         # Clear any pending appointments for this booking
